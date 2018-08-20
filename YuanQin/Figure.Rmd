@@ -1,0 +1,63 @@
+---
+title: "Figure"
+author: "Qin"
+date: "2018/10/23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(broom)
+library(tidyr)
+
+```
+
+## Fig. 2
+
+The spike-in based quantitative abundance profiling is more accurate than classical method based on relative abundance revealed by the synthetic bacterial mock community assay.
+
+**Fig. 2a**: Dose-response curves for linear correlation between the bacterial read counts of spike-in plasmid in Illumina sequencing and the amount of spike-in plasmid in the DNA samples, indicating that bacterial reads of spike-in plasmid in the sequencing data can reflect the amount of spike-in plasmid in the initial DNAs. 
+
+```{r}
+spike <- read.csv("data/Fig2a-glm.csv", header = T)
+head(spike,n=15)
+
+p <- ggplot(spike, aes(log2, counts, color = Dilution)) +
+  geom_point(size = 2.5) +
+  theme_bw() +
+  scale_y_continuous(limits = c(0, 12000)) +
+  geom_smooth(method = "glm", size = 0.8, colour = "grey10")+
+  labs(x="Spike-in amount (log2 copies/reaction)", y="Spike-in read counts") 
+p
+
+cor.test(spike$log2,spike$counts,method="pearson")
+
+lm.fit1 <- lm(spike$counts~ spike$log2)
+coef(lm.fit1)
+```
+
+**Fig. 2b**: Box plots representing the relative abundance of the nine bacteria in the same mock community (Group 2) with an arrange of spike-in concentrations from 0 to $7.96*10^5$ copies per PCR reaction. Please note that spike-in plasmids at different concentrations do not influence the original proportion of bacterial communities. Two-sided Dunnett’s adjusted test shows no significant differences between the bacterial relative abundance with different spike-in concentrations. The conclusion is consistent in two other sets of synthetic bacterial community
+
+```{r}
+data1 <- read.csv("data/Fig2b-bac-nospike-group2.csv", header = T)
+colnames(data1)[1] = "bacteria"
+data2 <- gather(data1, key = replicate , value = count, `sample01`:`sample05`)
+head(data2,n=10)
+
+p <- ggplot(data2, aes(bacteria, count))+
+  geom_boxplot(aes(fill = bacteria), na.rm = TRUE) +
+  facet_wrap(~spike, ncol = 5) +
+  scale_fill_manual(values = c("#ff8364", "#fdb87d", "#ffe8d5", "#fbd685","#7fa99b", 
+                               "#d5eeff", "#87e0ff", "#53c7f0", "#1d97c1"))+
+  labs(x="Bacteria", y="Count (%)")+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = -45, vjust = 1, hjust = 0)) 
+p
+```
+
+
