@@ -1,0 +1,5 @@
+"genotype"	".y."	"group1"	"group2"	"p"	"p.adj"	"p.format"	"p.signif"	"method"
+"1"	"MH63"	"ratio"	"dry"	"wet"	0.0808555983700523	0.16	"0.081"	"ns"	"Wilcoxon"
+"2"	"WYJ"	"ratio"	"dry"	"wet"	0.0808555983700523	0.16	"0.081"	"ns"	"Wilcoxon"
+"3"	"MH63"	"ratio"	"dry"	"wet"	0.106594695454951	0.11	"0.107"	"ns"	"T-test"
+"4"	"WYJ"	"ratio"	"dry"	"wet"	0.0406133017899101	0.081	"0.041"	"*"	"T-test"
