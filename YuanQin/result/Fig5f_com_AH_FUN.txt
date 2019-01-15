@@ -1,3 +1,0 @@
-"Genotype"	".y."	"group1"	"group2"	"p"	"p.adj"	"p.format"	"p.signif"	"method"
-"1"	"MH63"	"load"	"Dry"	"Wet"	0.964564704917335	0.96	"0.96"	"ns"	"Wilcoxon"
-"2"	"WYJ"	"load"	"Dry"	"Wet"	0.146168779239158	0.29	"0.15"	"ns"	"Wilcoxon"

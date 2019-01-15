@@ -1,3 +1,0 @@
-".y."	"group1"	"group2"	"p"	"p.adj"	"p.format"	"p.signif"	"method"
-"1"	"AA"	"Disease"	"Health"	0.00212668811503222	0.0021	"0.0021"	"**"	"Wilcoxon"
-"2"	"AA"	"Disease"	"Health"	0.0172481106970992	0.017	"0.017"	"*"	"T-test"
