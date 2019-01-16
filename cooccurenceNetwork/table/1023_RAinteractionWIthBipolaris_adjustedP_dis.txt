@@ -1,0 +1,3 @@
+adjusted-P
+g__Bipolaris	0
+Reyranella	0.000862968182899978

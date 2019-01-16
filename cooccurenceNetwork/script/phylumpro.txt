@@ -1,0 +1,1 @@
+../table/taxonomy	SampAvsB	Pvalue

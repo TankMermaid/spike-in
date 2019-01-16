@@ -1,0 +1,7 @@
+a_dis_p[a_dis_p[, colnames(a_dis_p) %in% "g__Bipolaris"] < 0.1, colnames(a_dis_p) %in% "g__Bipolaris"]
+g__Mycosphaerella	0.0303169826586486
+Caulobacter	0.0954378952830919
+g__Bipolaris	0
+g__Didymella	0.0226069280237637
+Reyranella	0.0817502176870327
+Mucilaginibacter	0.0898581485861428

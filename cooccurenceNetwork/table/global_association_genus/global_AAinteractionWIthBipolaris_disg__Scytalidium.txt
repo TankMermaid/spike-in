@@ -1,0 +1,3 @@
+g__Scytalidium	g__Myrmecridium
+g__Scytalidium	1	0.857142857142857
+g__Myrmecridium	0.857142857142857	1

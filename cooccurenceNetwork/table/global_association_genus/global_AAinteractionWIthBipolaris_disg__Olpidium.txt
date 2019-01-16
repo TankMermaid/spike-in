@@ -1,0 +1,3 @@
+g__Olpidium	Aciditerrimonas
+g__Olpidium	1	0.903614457831325
+Aciditerrimonas	0.903614457831325	1

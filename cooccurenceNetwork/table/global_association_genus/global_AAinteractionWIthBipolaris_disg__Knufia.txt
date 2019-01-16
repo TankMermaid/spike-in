@@ -1,0 +1,3 @@
+g__Knufia	Armatimonadetes_gp5
+g__Knufia	1	0.855421686746988
+Armatimonadetes_gp5	0.855421686746988	1

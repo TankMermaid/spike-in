@@ -1,0 +1,3 @@
+Sphingomonas	g__Phaeosphaeria
+Sphingomonas	1	0.952380952380953
+g__Phaeosphaeria	0.952380952380953	1

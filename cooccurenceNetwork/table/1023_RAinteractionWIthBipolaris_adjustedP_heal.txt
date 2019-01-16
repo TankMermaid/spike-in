@@ -1,0 +1,3 @@
+adjusted-P
+g__Bipolaris	1.0635035875251e-62
+Haliangium	0.00609992331369691

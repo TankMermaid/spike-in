@@ -1,0 +1,3 @@
+Piscinibacter	g__Olpidium
+Piscinibacter	1	0.898219696434944
+g__Olpidium	0.898219696434944	1

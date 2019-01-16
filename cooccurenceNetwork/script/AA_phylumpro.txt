@@ -1,0 +1,16 @@
+x
+1	p__Ascomycota
+2	p__unidentified
+3	p__Basidiomycota
+4	p__Chytridiomycota
+5	p__Mortierellomycota
+6	p__Kickxellomycota
+7	p__Rozellomycota
+8	p__Monoblepharomycota
+9	p__Calcarisporiellomycota
+10	p__Mucoromycota
+11	p__Entomophthoromycota
+12	p__Blastocladiomycota
+13	p__Zoopagomycota
+14	p__Olpidiomycota
+15	Low Abundance

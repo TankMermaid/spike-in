@@ -1,0 +1,14 @@
+Call:
+adonis(formula = as.dist(dist.nbs) ~ Genotype, data = map.nbs) 
+
+Permutation: free
+Number of permutations: 999
+
+Terms added sequentially (first to last)
+
+          Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)    
+Genotype   1    2.1786  2.1786    9.98 0.26277  0.001 ***
+Residuals 28    6.1124  0.2183         0.73723           
+Total     29    8.2910                 1.00000           
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1

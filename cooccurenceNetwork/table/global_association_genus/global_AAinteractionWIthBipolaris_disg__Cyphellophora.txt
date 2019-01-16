@@ -1,0 +1,3 @@
+g__Cyphellophora	Pseudorhodoferax
+g__Cyphellophora	1	0.904761904761905
+Pseudorhodoferax	0.904761904761905	1

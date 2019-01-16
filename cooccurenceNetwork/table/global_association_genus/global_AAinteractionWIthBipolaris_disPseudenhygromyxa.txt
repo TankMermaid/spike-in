@@ -1,0 +1,3 @@
+Pseudenhygromyxa	Ammoniphilus
+Pseudenhygromyxa	1	0.86144578313253
+Ammoniphilus	0.86144578313253	1

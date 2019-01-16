@@ -1,0 +1,5 @@
+adjusted-P
+g__Bipolaris	0
+Actinosynnema	0.00200827550542945
+g__Mycosphaerella	0.000862968182899978
+g__Didymella	0.0038503204637324

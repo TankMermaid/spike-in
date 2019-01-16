@@ -1,0 +1,4 @@
+Pedomicrobium	Oxalicibacterium	g__Phaeosphaeria
+Pedomicrobium	1	0.97007727214974	0.761904761904762
+Oxalicibacterium	0.97007727214974	1	0.838338383339281
+g__Phaeosphaeria	0.761904761904762	0.838338383339281	1

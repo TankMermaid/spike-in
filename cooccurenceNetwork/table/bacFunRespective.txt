@@ -1,0 +1,5 @@
+species	Condition	Genotype	stderr	species	Condition	Genotype	value
+1	bac	Root	Disease	408.163031671791	bac	Root	Disease	1833.29492827445
+2	fungi	Root	Disease	175.661183036391	fungi	Root	Disease	1399.9983603899
+3	bac	Root	Healthy	206.319082464146	bac	Root	Healthy	778.948096890085
+4	fungi	Root	Healthy	82.9939922856317	fungi	Root	Healthy	316.512227066892

@@ -1,0 +1,3 @@
+g__Clonostachys	Thiobacillus
+g__Clonostachys	1	0.838338383339281
+Thiobacillus	0.838338383339281	1

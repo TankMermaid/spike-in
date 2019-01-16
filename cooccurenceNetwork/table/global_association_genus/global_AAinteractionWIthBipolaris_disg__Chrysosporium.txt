@@ -1,0 +1,3 @@
+g__Chrysosporium	Ochrobactrum
+g__Chrysosporium	1	0.976190476190476
+Ochrobactrum	0.976190476190476	1

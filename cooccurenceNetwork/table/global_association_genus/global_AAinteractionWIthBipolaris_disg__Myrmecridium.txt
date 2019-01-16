@@ -1,0 +1,3 @@
+g__Myrmecridium	g__Knufia
+g__Myrmecridium	1	0.946124746911475
+g__Knufia	0.946124746911475	1

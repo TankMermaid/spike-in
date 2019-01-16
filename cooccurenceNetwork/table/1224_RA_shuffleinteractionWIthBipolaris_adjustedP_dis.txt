@@ -1,0 +1,5 @@
+adjusted-P
+g__Bipolaris	0
+g__Didymella	0.000525730789939475
+Reyranella	0.00672792962173472
+Mucilaginibacter	0.00814834092084377

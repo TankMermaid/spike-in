@@ -1,0 +1,12 @@
+adjusted-P
+g__Mycosphaerella	0.0303169826586486
+g__Bipolaris	0
+Kaistia	0.0139708299345223
+g__Didymella	0.000525730789939475
+Kinneretia	0.0197085659158017
+Methylotenera	0.045759980280991
+Aquimonas	0.0255036803158819
+Reyranella	0.00672792962173472
+Ferruginibacter	0.0197464736583189
+Mucilaginibacter	0.00814834092084377
+Chthonomonas/Armatimonadetes_gp3	0.0291413040136402
