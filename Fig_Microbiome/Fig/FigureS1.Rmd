@@ -1,0 +1,89 @@
+---
+title: "FigureS1"
+author: "Qin Yuan"
+date: "2019/4/1"
+output: html_document
+---
+
+
+```{r warning=FALSE, message=FALSE}
+rm(list=ls()) 
+
+library(ggplot2)
+library(ggpubr)
+library(dplyr)
+library(tidyr)
+```
+
+## Fig S1
+
+```{r}
+bac_ra <- read.csv("data/Fig2c-bar-ra.csv", header = T)
+table_bac_ra_r <- gather(bac_ra,  key = sample , value = count, `sample01`:`sample04`)
+table_bac_ra <- table_bac_ra_r
+table_bac_ra$bacteria <- factor(table_bac_ra_r$bacteria)
+table_bac_ra$group <- factor(table_bac_ra_r$group)
+
+bac_aa <- read.csv("data/Fig2d-bar-aa.csv", header = T)
+table_bac_aa_r <- gather(bac_aa,  key = sample , value = count, `sample01`:`sample04`)
+table_bac_aa <- table_bac_aa_r
+table_bac_aa$bacteria <- factor(table_bac_aa_r$bacteria)
+table_bac_aa$group <- factor(table_bac_aa_r$group)
+```
+
+
+```{r}
+E05_bac_ra <- filter(table_bac_ra, spike == "E05")
+E55_bac_ra <- filter(table_bac_ra, spike == "E55")
+E04_bac_ra <- filter(table_bac_ra, spike == "E04")
+FigS3S4_bac_ra <- rbind(E05_bac_ra, E55_bac_ra, E04_bac_ra)
+
+group1_FigS3S4_bac_ra <- filter(FigS3S4_bac_ra , group == "1:01:01")
+group2_FigS3S4_bac_ra <- filter(FigS3S4_bac_ra , group == "2:02:02")
+
+E05_bac_aa <- filter(table_bac_aa, spike == "E05")
+E55_bac_aa <- filter(table_bac_aa, spike == "E55")
+E04_bac_aa <- filter(table_bac_aa, spike == "E04")
+FigS3S4_bac_aa <- rbind(E05_bac_aa, E55_bac_aa, E04_bac_aa)
+
+group1_FigS3S4_bac_aa <- filter(FigS3S4_bac_aa , group == "1:01:01")
+group2_FigS3S4_bac_aa <- filter(FigS3S4_bac_aa , group == "2:02:02")
+
+FigS3_ra_g1g2 <- rbind(group1_FigS3S4_bac_ra, group2_FigS3S4_bac_ra)
+FigS3_aa_g1g2 <- rbind(group1_FigS3S4_bac_aa, group2_FigS3S4_bac_aa)
+
+FigS3_ra_g1g2$spike <- factor(FigS3_ra_g1g2$spike,levels=c("E05","E55", "E04"))
+FigS3_aa_g1g2$spike <- factor(FigS3_aa_g1g2$spike,levels=c("E05","E55", "E04"))
+```
+
+
+```{r}
+FigS3_ra <- ggplot(FigS3_ra_g1g2) +
+  geom_boxplot(aes(x = bacteria, y = count, fill = group), width = 0.3, na.rm = TRUE) +
+  scale_fill_manual(values=c("#9acd32","#ffa07a"))+
+  geom_line(aes(x = bacteria, y = mean, group = group, color = group), na.rm = TRUE) +
+  facet_wrap(~spike, ncol = 3, as.table = TRUE) +
+  labs(x="Bacteria", y="Relative abundance (%)")  +
+  scale_x_discrete(limits=c("Act-101","Act-135","Act-140","Bac-186","Fir-11","Pro-1203","Pro-1204","Pro-670","Pro-672"))+
+  scale_color_manual(values=c("#9acd32","#ffa07a"))+
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = -45, vjust = 1, hjust = 0))
+FigS3_ra
+# 
+# ggsave(paste("result/FigS3-ra.pdf", sep=""), FigS3_ra, width = 9, height = 5)
+
+FigS3_aa <- ggplot(FigS3_aa_g1g2) +
+  geom_boxplot(aes(x = bacteria, y = count, fill = group), width = 0.3, na.rm = TRUE) +
+  scale_fill_manual(values=c("#9acd32","#ffa07a"))+
+  geom_line(aes(x = bacteria, y = mean, group = group, color = group), na.rm = TRUE) +
+  facet_wrap(~spike, ncol = 3, as.table = TRUE) +
+  labs(x="Bacteria", y="Quantitative abundance (relative to plant)")  +
+  scale_x_discrete(limits=c("Act-101","Act-135","Act-140","Bac-186","Fir-11","Pro-1203","Pro-1204","Pro-670","Pro-672"))+
+  scale_color_manual(values=c("#9acd32","#ffa07a"))+
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = -45, vjust = 1, hjust = 0))
+FigS3_aa
+# 
+# ggsave(paste("result/FigS3_aa.pdf", sep=""), FigS3_aa, width = 9, height = 5)
+
+```

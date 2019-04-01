@@ -1,0 +1,268 @@
+---
+title: "Figure6"
+author: "Qin Yuan"
+date: "2019/4/1"
+output: html_document
+---
+
+
+```{r warning=FALSE, message=FALSE}
+rm(list=ls()) 
+
+library(ggplot2)
+library(ggpubr)
+library(dplyr)
+library(tidyr)
+library(broom)
+library(plyr)
+library(scales)
+library(pheatmap)
+library("reshape2", quietly=T, warn.conflicts=F)
+library(ggalluvial)
+```
+
+## Fig 6a
+
+
+
+## Fig 6b
+
+```{r}
+# 2.1 安装CRAN来源常用包
+site="https://mirrors.tuna.tsinghua.edu.cn/CRAN"
+# 依赖包列表：参数解析、数据变换、绘图和开发包安装、安装依赖、ggplot主题
+package_list = c("reshape2","ggplot2","vegan")
+# 判断R包加载是否成功来决定是否安装后再加载
+for(p in package_list){
+  if(!suppressWarnings(suppressMessages(require(p, character.only = TRUE, quietly = TRUE, warn.conflicts = FALSE)))){
+    install.packages(p, repos=site)
+    suppressWarnings(suppressMessages(library(p, character.only = TRUE, quietly = TRUE, warn.conflicts = FALSE)))
+  }
+}
+
+# 2.2 安装bioconductor常用包
+package_list = c("digest","ggrepel")
+for(p in package_list){
+  if(!suppressWarnings(suppressMessages(require(p, character.only = TRUE, quietly = TRUE, warn.conflicts = FALSE)))){
+    source("https://bioconductor.org/biocLite.R")
+    biocLite(p)
+    suppressWarnings(suppressMessages(library(p, character.only = TRUE, quietly = TRUE, warn.conflicts = FALSE)))
+  }
+}
+
+# 2.3 安装Github常用包
+# 参数解析、数据变换、绘图和开发包安装
+package_list = c("kassambara/ggpubr")
+for(p in package_list){
+  q=unlist(strsplit(p,split = "/"))[2]
+  if(!suppressWarnings(suppressMessages(require(q, character.only = TRUE, quietly = TRUE, warn.conflicts = FALSE)))){
+    install_github(p)
+    suppressWarnings(suppressMessages(library(q, character.only = TRUE, quietly = TRUE, warn.conflicts = FALSE)))
+  }
+}
+
+# 函数1：采用adonis对距离矩阵进行组间差异统计
+# Compare each group distance matrix by vegan adonis in bray_curtis
+da_adonis = function(sampleV){
+  sampleA = as.matrix(sampleV$sampA)
+  sampleB = as.matrix(sampleV$sampB)
+  design2 = subset(sub_design, group %in% c(sampleA,sampleB))
+  if (length(unique(design2$group))>1) {
+    sub_dis_table = dis_table[rownames(design2),rownames(design2)]
+    sub_dis_table = as.dist(sub_dis_table, diag = FALSE, upper = FALSE)
+    adonis_table = adonis(sub_dis_table ~ group, data = design2, permutations = 1000) 
+    adonis_pvalue = adonis_table$aov.tab$`Pr(>F)`[1]
+    print(paste("In", m, "pvalue between", sampleA, "and", sampleB, "is", adonis_pvalue, sep=" "))
+    adonis_pvalue = paste(m, sampleA, sampleB, adonis_pvalue, sep="\t")
+    return(adonis_pvalue)
+  }
+}
+
+
+# 3. 读取输入文件
+
+# 读取实验设计
+design = read.table("./data/design.txt", header=T, row.names=1, sep="\t")
+# 统一改实验列为group
+design$group=design$groupID
+
+# 按实验组筛选 Select by manual set group
+if (TRUE){
+  sub_design = subset(design, group %in% c("DiseaseRootspike","HealthyRootspike","BulksoilBulksoilspike"))
+  # 调置组排序 Set group order
+  sub_design$group  = factor(sub_design$group, levels=c("DiseaseRootspike","HealthyRootspike","BulksoilBulksoilspike"))
+}else{
+  sub_design = design
+}
+# 
+library(dplyr)
+sub_design_t = as.data.frame(t(sub_design))
+sub_design_2 = dplyr::select(sub_design_t, TABS1, TABS2, TABS3, TABS4, TABS5, TAD2, TAD3, TAD4, TAD6, TAD7, TAD9, TAD10, TAH1, TAH3, TAH4, TAH5, TAH6, TAH8, TAH10)
+sub_design = as.data.frame(t(sub_design_2))
+```
+
+
+```{r}
+beta = read.table(paste("./data/beta/fungi_bray_curtis.txt",sep=""), header=T, row.names=1, sep="\t", comment.char="") 
+idx = rownames(sub_design) %in% rownames(beta)
+sub_design=sub_design[idx,]
+sub_beta=beta[rownames(sub_design),rownames(sub_design)]
+
+pcoa = cmdscale(sub_beta, k=4, eig=T) # k is dimension, 3 is recommended; eig is eigenvalues
+points = as.data.frame(pcoa$points) # get coordinate string, format to dataframme
+eig = pcoa$eig
+points = cbind(points, sub_design$group)
+colnames(points) = c("PC1", "PC2", "PC3", "PC4","group") 
+
+p = ggplot(points, aes(x=PC1, y=PC2, color=group, shape= group)) + geom_point(alpha=.7, size=2) +
+    labs(x=paste("PCoA 1 (", format(100 * eig[1] / sum(eig), digits=4), "%)", sep=""),
+         y=paste("PCoA 2 (", format(100 * eig[2] / sum(eig), digits=4), "%)", sep=""),
+         title=paste("bray_curtis PCoA",sep="")) + theme_classic() + 
+    scale_shape_manual(values=c(16, 17, 15))+ 
+    scale_color_manual(values=c("#C80000", "#654321", "#000000"))+ 
+    theme(legend.position="top")
+p
+```
+
+
+
+
+## Fig 6c
+
+```{r}
+data = read.table("./data/cluster_total_load.txt",header = T, row.names = 1)
+head(data)
+
+sub_data = subset(data, SampleID %in% c("TAD2", "TAD3", "TAD4", "TAD6", "TAD7", "TAD9", "TAD10", "TAH1", "TAH3", "TAH4", "TAH5", "TAH6", "TAH8", "TAH10"))
+```
+
+
+```{r}
+com_w1 <- compare_means( Totalload ~ Treatment, data = sub_data, method = "wilcox.test", paired=FALSE, group.by = "Micro")
+com_t1 <- compare_means( Totalload ~ Treatment, data = sub_data, method = "t.test", paired=FALSE, group.by = "Micro")
+head(com_t1)
+head(com_w1)
+
+com <- rbind(com_w1, com_t1)
+# write.table(com , file = "./ttload_cluster_com.txt",sep = '\t',row.names = T)
+```
+
+
+```{r}
+p1 = ggbarplot(sub_data, x = "Treatment", y = "Totalload", add = "mean_se", facet.by = "Micro",ylim = c(0, 2500))+
+  stat_compare_means(method = "t.test", label =  "p.signif", label.y = 2500, label.x = 1.5)  
+p1
+# ggsave(paste("./ttload_cluster_com.pdf", sep=""), p1, width = 6, height = 8)
+# ggsave(paste("./ttload_cluster_com.png", sep=""), p1, width = 6, height = 8)
+
+```
+
+## Fig 6d
+
+```{r}
+# Public file 1. "design.txt"  Design of experiment
+design = read.table("./data/design.txt", header=T, row.names= 1, sep="\t") 
+
+# Public file 2. "otu_table.txt"  raw reads count of each OTU in each sample
+otu_table = read.delim("./data/otu_plant_aa.txt", row.names= 1,  header=T, sep="\t")
+
+# Public file 3. "rep_seqs_tax.txt"  taxonomy for each OTU, tab seperated
+taxonomy = read.delim("./data/taxonomy_8.txt", row.names= 1,header=F, sep="\t")
+colnames(taxonomy) = c("kingdom","phylum","class","order","family","genus","species")
+
+tax_count = merge(taxonomy, otu_table, by="row.names")
+
+```
+
+```{r}
+## remove the abnormal points
+sub_tax_count = dplyr::select(tax_count, Row.names, kingdom, phylum, class, order, family, genus, species, TAD2, TAD3, TAD4, TAD6, TAD7, TAD9, TAD10, TAH1, TAH3, TAH4, TAH5, TAH6, TAH8, TAH10)
+
+
+
+g1_Bipolaris = dplyr::filter(sub_tax_count, genus == "Bipolaris")
+g2_Fusarium = dplyr::filter(sub_tax_count, genus == "Fusarium")
+genus = rbind(g1_Bipolaris, g2_Fusarium)
+otuid = as.data.frame(genus$Row.names)
+colnames(otuid) = "Row.names"
+
+
+com_genus = merge(sub_tax_count, otuid, by="Row.names")
+colnames(com_genus)[1] = "OTUID"
+
+
+com_genus_tidy = gather(com_genus, key = SampleID , value = method2aa, `TAD2`:`TAH10`)
+
+
+design2 = read.table("./data/design.txt", header=T, sep="\t") 
+com_genus_tidy_design = merge(com_genus_tidy, design2, by="SampleID")
+com_aa = dplyr::select(com_genus_tidy_design, SampleID, OTUID, genus, method2aa, Genotype)
+colnames(com_aa)[3] = "Genus"
+colnames(com_aa)[5] = "Treatment"
+# 
+# write.table(com_aa, file = "./pointD1D5D8H2H7H9/com_aa.txt",sep = '\t',row.names = T)
+```
+
+
+
+```{r}
+## 读取com_ra数据
+com_ra <-  read.table("./data/com_ra.txt", header=T, sep="\t") 
+com_method1ra = gather(com_ra, key = Method , value = value, `method1ra`)
+com_method2aa = gather(com_aa, key = Method , value = value, `method2aa`)
+
+## 整合compare总表
+com_aara <- rbind(com_method1ra, com_method2aa)
+```
+
+
+
+```{r}
+## 使用两种方法检测OTU在不同样品中的丰度
+OTU45 <- dplyr::filter(com_aara, OTUID == "OTU_45")
+
+p45 <- ggboxplot(OTU45, x="Treatment",y = "value",
+               facet.by = "Method", color = "Treatment", order = c("Disease","Healthy"),
+               palette =  "uchicago", add = "jitter", short.panel.labs = FALSE, title = "OTU_45_Bipolaris")
+# 添加p值
+p045 <- p45 + stat_compare_means(label =  "p.signif",  method = "wilcox.test",label.x = 1.55)
+
+p045
+
+# ggsave(paste("./pointD1D5D8H2H7H9/com_aa_OTU_45.pdf", sep=""), p032, width = 6, height = 7)
+# ggsave(paste("./pointD1D5D8H2H7H9/com_aa_OTU_45.png", sep=""), p032, width = 6, height = 7)
+```
+
+
+## Fig 6e
+
+```{r}
+data = read.table("./data/Fig6g.txt",header = T, row.names = 1)
+head(data)
+
+data_1 <- filter(data, re == "1")
+data_2 <- filter(data, re == "2")
+```
+
+```{r}
+com_1 <- compare_means( ratio ~ treatment, data = data_1, method = "wilcox.test", paired=FALSE)
+com_t1 <- compare_means( ratio ~ treatment, data = data_1, method = "t.test", paired=FALSE)
+com_2 <- compare_means( ratio ~ treatment, data = data_2, method = "wilcox.test", paired=FALSE)
+com_t2 <- compare_means( ratio ~ treatment, data = data_2, method = "t.test", paired=FALSE)
+head(com_1)
+head(com_t1)
+head(com_2)
+head(com_t2)
+
+com <- rbind(com_1, com_t1, com_2, com_t2)
+
+# 
+# write.table(com , file = "./result/Fig6_load_com.txt",sep = '\t',row.names = T)
+```
+
+```{r}
+p1 = ggbarplot(data_1, x = "treatment", y = "ratio", add = "mean_se")+
+  stat_compare_means(method = "t.test")  
+p1
+# ggsave(paste("./result/Fig6-load-1.pdf", sep=""), p1, width = 3, height = 6)
+```

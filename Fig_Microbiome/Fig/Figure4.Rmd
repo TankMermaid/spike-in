@@ -1,0 +1,140 @@
+---
+title: "Figure4"
+author: "Qin Yuan"
+date: "2019/4/1"
+output: html_document
+---
+
+
+```{r warning=FALSE, message=FALSE}
+rm(list=ls()) 
+
+library(ggplot2)
+library(ggpubr)
+library(dplyr)
+library(tidyr)
+library(broom)
+library(plyr)
+library(scales)
+library(pheatmap)
+library("reshape2", quietly=T, warn.conflicts=F)
+library(ggalluvial)
+```
+
+# Fig 4a
+
+```{r}
+bac <- read.csv("data/Fig4a-lm-bac.csv", header = T)
+fun <- read.csv("data/Fig4a-lm-fun.csv", header = T)
+
+## Bacteria E05-E00
+data_e05_bac <- dplyr::select(bac, OTUID, E05_bac, E00_bac)
+
+x1 <- data_e05_bac$E05_bac
+y1 <- data_e05_bac$E00_bac
+
+cor.test(x1,y1,method="pearson")
+lm.fit1 <- lm(y1~0+x1)
+coef(lm.fit1)
+
+plot(data_e05_bac$E05_bac,data_e05_bac$E00_bac,
+     xlab ="OTU reads (%) Unamended root DNA", 
+     ylab ="OTU reads (%) spiked root DNA")
+
+abline(lm.fit1)
+```
+
+## Fig 4b
+
+```{r}
+## Fungi E05-E00
+data_e05_fun <- dplyr::select(fun, OTUID, E05_fun, E00_fun)
+
+x4 <- data_e05_fun$E05_fun
+y4 <- data_e05_fun$E00_fun
+
+cor.test(x4,y4,method="pearson")
+lm.fit4 <- lm(y4~0+x4)
+coef(lm.fit4)
+
+plot(data_e05_fun$E05_fun,data_e05_fun$E00_fun,pch=2,
+     xlab ="OTU reads (%) Unamended root DNA", 
+     ylab ="OTU reads (%) spiked root DNA")
+
+abline(lm.fit4)
+```
+
+## Fig 4c - Fig 4d
+
+```{r}
+bac <- read.csv("data/Fig4c-bac-all.csv")
+fun <- read.csv("data/Fig4c-fun-all.csv")
+fun2<- read.csv("data/Fig4c-fun-point.csv")
+
+
+## E05-BAC-RA
+
+t1 <- dplyr::select(bac, Bac, E05_RA_ONE, E05_RA_TWO)
+
+bac05ra <- gather(t1, key = variable , value = count, `E05_RA_ONE`:`E05_RA_TWO`)
+
+p1 = ggplot(bac05ra, aes(x=variable, y = count, fill = Bac )) + 
+  geom_bar(stat = "identity",position="fill", width=0.7)+ 
+  scale_fill_manual(values = c("#ff8364", "#fbd685", 
+                               "#7fa99b", "#f6f6e9", "#1d97c1"))+
+  scale_y_continuous(labels = scales::percent) + 
+  xlab("Groups")+
+  ylab("Relative Abundance (%)")+ 
+  theme_classic()
+p1
+
+## E05-BAC-QA
+
+t4 <- dplyr::select(bac, Bac, E05_QA_ONE, E05_QA_TWO)
+
+bac05qa <- gather(t4, key = variable , value = count, `E05_QA_ONE`:`E05_QA_TWO`)
+
+p4 = ggplot(bac05qa, aes(x=variable, y = count, fill = Bac )) + 
+  geom_bar(stat = "identity", width=0.7) + 
+  scale_fill_manual(values = c("#ff8364", "#fbd685", 
+                               "#7fa99b", "#f6f6e9", "#1d97c1"))+
+  xlab("Groups")+
+  ylab("Quantitative Abundance (relative to host plant)")+ 
+  theme_classic()
+p4
+
+```
+
+## Fig 4e - Fig 4f
+
+```{r}
+## E05-FUN-RA
+
+f1 <- dplyr::select(fun, FUN, E05_RA_ONE, E05_RA_TWO)
+
+fun05ra <- gather(f1, key = variable , value = count, `E05_RA_ONE`:`E05_RA_TWO`)
+
+fp1 = ggplot(fun05ra, aes(x=variable, y = count, fill = FUN )) + 
+  geom_bar(stat = "identity",position="fill", width=0.7)+ 
+  scale_fill_manual(values = c("#8ea6b4", "#f8d5f0","#89a4c7"))+
+  scale_y_continuous(labels = scales::percent) + 
+  xlab("Groups")+
+  ylab("Relative Abundance (%)")+ 
+  theme_classic()
+fp1
+
+## E05-FUN-QA
+
+f3 <- dplyr::select(fun, FUN, E05_QA_ONE, E05_QA_TWO)
+
+fun05qa <- gather(f3, key = variable , value = count, `E05_QA_ONE`:`E05_QA_TWO`)
+
+fp3 = ggplot(fun05qa, aes(x=variable, y = count, fill = FUN )) + 
+  geom_bar(stat = "identity", width=0.7) + 
+  scale_fill_manual(values = c("#8ea6b4", "#f8d5f0","#89a4c7"))+
+  xlab("Groups")+
+  ylab("Quantitative Abundance (relative to host plant)")+ 
+  theme_classic()
+fp3
+
+```
