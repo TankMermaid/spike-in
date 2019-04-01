@@ -1,0 +1,16 @@
+BacHnMH63dry	BacHnMH63wet
+BacHnMH63ZHdry	BacHnMH63ZHwet
+BacHnWYJ7DEP1dry	BacHnWYJ7DEP1wet
+BacAhWYJ7DEP1dry	BacAhWYJ7DEP1wet
+BacAhMH63dry	BacAhMH63wet
+BacAhMH63ZHdry	BacAhMH63ZHwet
+BacHnBulksoildry	BacHnBulksoilwet
+BacAhBulksoildry	BacAhBulksoilwet
+BacHnMH63dry	BacHnWYJ7DEP1dry
+BacHnMH63wet	BacHnWYJ7DEP1wet
+BacHnMH63dry	BacAhMH63dry
+BacHnWYJ7DEP1dry	BacAhWYJ7DEP1dry
+BacHnMH63wet	BacAhMH63wet
+BacHnWYJ7DEP1wet	BacAhWYJ7DEP1wet
+BacHnBulksoildry	BacAhBulksoildry
+BacHnBulksoilwet	BacAhBulksoilwet

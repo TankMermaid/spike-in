@@ -1,0 +1,35 @@
+[1] "2019-03-27DroughtWetRiceUnoiseAnHui PerMANOVA Results As Follows with or without Bulksoil respectively:"
+
+Call:
+adonis(formula = as.dist(dist) ~ Genotype + Other + Genotype:Other,      data = map) 
+
+Permutation: free
+Number of permutations: 999
+
+Terms added sequentially (first to last)
+
+                Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)    
+Genotype         3    8.7745  2.9248  24.826 0.32526  0.001 ***
+Other            1    4.3834  4.3834  37.207 0.16249  0.001 ***
+Genotype:Other   3    2.7445  0.9148   7.765 0.10174  0.001 ***
+Residuals       94   11.0743  0.1178         0.41051           
+Total          101   26.9767                 1.00000           
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Call:
+adonis(formula = as.dist(dist.nbs) ~ Genotype + Other + Genotype:Other,      data = map.nbs) 
+
+Permutation: free
+Number of permutations: 999
+
+Terms added sequentially (first to last)
+
+               Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)    
+Genotype        2    2.9094  1.4547  11.868 0.14560  0.001 ***
+Other           1    4.8745  4.8745  39.768 0.24394  0.001 ***
+Genotype:Other  2    1.9022  0.9511   7.759 0.09519  0.001 ***
+Residuals      84   10.2961  0.1226         0.51526           
+Total          89   19.9821                 1.00000           
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
