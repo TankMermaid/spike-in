@@ -1,0 +1,207 @@
+---
+title: "Figure3"
+author: "Qin Yuan"
+date: "2019/4/1"
+output: html_document
+---
+
+```{r warning=FALSE, message=FALSE}
+rm(list=ls()) 
+
+library(ggplot2)
+library(ggpubr)
+library(dplyr)
+library(tidyr)
+library(broom)
+library(plyr)
+library(scales)
+library(pheatmap)
+library("reshape2", quietly=T, warn.conflicts=F)
+library(ggalluvial)
+```
+
+## Fig 3a
+
+```{r}
+
+spike <- read.csv("data/Fig3a-glm-group1.csv", header = T)
+
+mod1 <- glm(counts ~ log2, family = poisson(link = "log"), data = spike)
+
+p1 <- ggplot(spike, aes(log2, counts))+
+  geom_smooth(method = "glm", size = 0.8, colour = "grey10") +
+  geom_point(size = 2.5, colour = "grey20") +
+  theme_bw() +
+  scale_y_continuous(limits = c(0, 11000)) +
+  labs(x="spike-in amount (log2 copies/reaction)", y="spike-in read counts") 
+
+p1
+# 
+# ggsave(paste("result/Fig3a-glm-group1.pdf", sep=""), p1, width = 6, height = 6)
+
+
+cor.test(spike$log2,spike$counts,method="pearson")
+
+lm.fit1 <- lm(spike$counts~ spike$log2)
+coef(lm.fit1)
+
+```
+
+## Fig 3b
+
+```{r}
+data1 <- read.csv("data/Fig3b-fun-nospike-group1.csv", header = T)
+
+
+data1G <- gather(data1, key = replicate , value = count, `sample01`:`sample03`)
+
+
+p1 <- ggplot(data1G, aes(fungi, count))+
+  geom_boxplot(aes(fill = fungi), na.rm = TRUE) +
+  facet_wrap(~spike, ncol = 5) +
+  labs(x="Dilution gradient spike-in", y="Relative abundance (%)")+
+  scale_fill_manual(values = c("#8ea6b4","#e7eff3", "#f8d5f0")) +
+  scale_x_discrete(limits=c("Basi-AF78","Asco-AF1","Asco-AF105"))+
+  theme_bw()+
+  theme(axis.text.x = element_text(angle = -45, vjust = 1, hjust = 0)) 
+
+p1
+
+# ggsave(paste("result/Fig3b-fun-nospike-group1.pdf", sep=""), p1, width = 8, height = 5)
+
+```
+
+## Fig 3c - Fig 3d
+
+```{r}
+fun_ra <- read.csv("data/Fig3c-bar-ra.csv", header = T)
+table_fun_ra_r <- gather(fun_ra,  key = sample , value = count, `sample01`:`sample04`)
+table_fun_ra <- table_fun_ra_r
+table_fun_ra$fungi <- factor(table_fun_ra_r$fungi)
+table_fun_ra$group <- factor(table_fun_ra_r$group)
+E0520_fun_ra <- filter(table_fun_ra, spike == "E0520")
+group1_E0520_fun_ra <- filter(E0520_fun_ra , group == "1:01:01")
+group2_E0520_fun_ra <- filter(E0520_fun_ra , group == "2:02:02")
+
+
+fun_aa <- read.csv("data/Fig3d-bar-aa.csv", header = T)
+table_fun_aa_r <- gather(fun_aa,  key = sample , value = count, `sample01`:`sample04`)
+table_fun_aa <- table_fun_aa_r
+table_fun_aa$fungi <- factor(table_fun_aa_r$fungi)
+table_fun_aa$group <- factor(table_fun_aa_r$group)
+E0520_fun_aa <- filter(table_fun_aa, spike == "E0520")
+group1_E0520_fun_aa <- filter(E0520_fun_aa, group == "1:01:01")
+group2_E0520_fun_aa <- filter(E0520_fun_aa, group == "2:02:02")
+
+Fig3c_ra_g1g2 <- rbind(group1_E0520_fun_ra, group2_E0520_fun_ra)
+Fig3d_aa_g1g2 <- rbind(group1_E0520_fun_aa, group2_E0520_fun_aa)
+
+```
+
+
+```{r}
+Fig3c <- ggplot(Fig3c_ra_g1g2) +
+  geom_boxplot(aes(x = fungi, y = count, fill = group), width = 0.3, na.rm = TRUE) +
+  scale_fill_manual(values=c("#9acd32","#ffa07a"))+
+  geom_line(aes(x = fungi, y = mean, group = group, color = group), na.rm = TRUE) +
+  labs(x="Fungi", y="Relative abundance (%)")  +
+  scale_x_discrete(limits=c("Basi-AF78","Asco-AF1","Asco-AF105"))+
+  scale_color_manual(values=c("#9acd32","#ffa07a"))+
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = -45, vjust = 1, hjust = 0))
+Fig3c
+# ggsave(paste("result/Fig3c-ra-g1g2-boxplot.pdf", sep=""), Fig3c, width = 4, height = 6)
+
+
+
+Fig3d <- ggplot(Fig3d_aa_g1g2) +
+  geom_boxplot(aes(x = fungi, y = count, fill = group), width = 0.3, na.rm = TRUE) +
+  scale_fill_manual(values=c("#9acd32","#ffa07a"))+
+  geom_line(aes(x = fungi, y = mean, group = group, color = group), na.rm = TRUE) +
+  labs(x="Fungi", y="Quantitative abundance (relative to plant)")  +
+  scale_x_discrete(limits=c("Basi-AF78","Asco-AF1","Asco-AF105"))+
+  scale_color_manual(values=c("#9acd32","#ffa07a"))+
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = -45, vjust = 1, hjust = 0))
+Fig3d
+# ggsave(paste("result/Fig3d-aa-g1g2-boxplot.pdf", sep=""), Fig3d, width = 4, height = 6)
+
+```
+
+## Fig 3e - Fig 3f
+
+```{r}
+fun_ra <- read.csv("data/Fig3e-bar-ra.csv", header = T)
+table_fun_ra_r <- gather(fun_ra,  key = sample , value = count, `sample01`:`sample04`)
+table_fun_ra <- table_fun_ra_r
+table_fun_ra$fungi <- factor(table_fun_ra_r$fungi)
+table_fun_ra$group <- factor(table_fun_ra_r$group)
+E0520_fun_ra <- filter(table_fun_ra, spike == "E0520")
+group1_E0520_fun_ra <- filter(E0520_fun_ra , group == "1:01:01")
+group3_E0520_fun_ra <- filter(E0520_fun_ra , group == "2:02:01")
+
+
+fun_aa <- read.csv("data/Fig3f-bar-aa.csv", header = T)
+table_fun_aa_r <- gather(fun_aa,  key = sample , value = count, `sample01`:`sample04`)
+table_fun_aa <- table_fun_aa_r
+table_fun_aa$fungi <- factor(table_fun_aa_r$fungi)
+table_fun_aa$group <- factor(table_fun_aa_r$group)
+E0520_fun_aa <- filter(table_fun_aa, spike == "E0520")
+group1_E0520_fun_aa <- filter(E0520_fun_aa, group == "1:01:01")
+group3_E0520_fun_aa <- filter(E0520_fun_aa, group == "2:02:01")
+
+Fig3e_ra_g1g3 <- rbind(group1_E0520_fun_ra, group3_E0520_fun_ra)
+Fig3f_aa_g1g3 <- rbind(group1_E0520_fun_aa, group3_E0520_fun_aa)
+
+```
+
+
+```{r}
+Fig3e <- ggplot(Fig3e_ra_g1g3) +
+  geom_boxplot(aes(x = fungi, y = count, fill = group), width = 0.3, na.rm = TRUE) +
+  scale_fill_manual(values=c("#9acd32","#87cefa"))+
+  geom_line(aes(x = fungi, y = mean, group = group, color = group), na.rm = TRUE) +
+  labs(x="Fungi", y="Relative abundance (%)")  +
+  scale_x_discrete(limits=c("Basi-AF78","Asco-AF1","Asco-AF105"))+
+  scale_color_manual(values=c("#9acd32","#87cefa"))+
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = -45, vjust = 1, hjust = 0))
+Fig3e
+
+Fig3f <- ggplot(Fig3f_aa_g1g3) +
+  geom_boxplot(aes(x = fungi, y = count, fill = group), width = 0.3, na.rm = TRUE) +
+  scale_fill_manual(values=c("#9acd32","#87cefa"))+
+  geom_line(aes(x = fungi, y = mean, group = group, color = group), na.rm = TRUE) +
+  labs(x="Fungi", y="Quantitative abundance (relative to plant)")  +
+  scale_x_discrete(limits=c("Basi-AF78","Asco-AF1","Asco-AF105"))+
+  scale_color_manual(values=c("#9acd32","#87cefa"))+
+  theme_classic() +
+  theme(axis.text.x = element_text(angle = -45, vjust = 1, hjust = 0))
+Fig3f
+
+# ggsave(paste("result/Fig3e-ra-g1g3-boxplot.pdf", sep=""), Fig3e, width = 4, height = 6)
+# ggsave(paste("result/Fig3f-aa-g1g3-boxplot.pdf", sep=""), Fig3f, width = 4, height = 6)
+
+```
+
+## Fig 3g
+
+```{r}
+## fun ra_aa error
+
+spike2 <- read.csv("data/Fig3g-error.csv", header = T)
+x <- c(0, 1, 1.1)
+y <- c(0, 1, 1.1)
+df <- data.frame(x=x, y=y)
+
+funplot <- ggplot(df, aes(x, y)) +
+  geom_line() +
+  geom_point(data = spike2, aes(x = error_RA, y = error_AA, color = Spikeinamount),size = 2.5, na.rm = TRUE) + 
+  theme_bw() +  
+  scale_x_continuous(limits = c(0, 1.1)) + 
+  scale_y_continuous(limits = c(0, 1.1)) + 
+  labs(x="Fungi RA error", y="Fungi AA error") 
+funplot
+# ggsave(paste("result/Fig3g-error.pdf", sep=""), funplot, width = 7, height = 6)
+
+```

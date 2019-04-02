@@ -1,0 +1,57 @@
+---
+title: "Spike-in quantitative abundance profiling reveals the microbial load variation of the root microbiome"
+author: "Xiaoxuan Guo1,2,#, Xiaoning Zhang1,2,3,#, Yuan Qin1,2,3,#, Yong-Xin Liu1,2, Jingying Zhang1,2, Na Zhang1,2,3, Kun Wu3,4, Baoyuan Qu1,2, Zishan He1,2,3, Xin Wang1,2, Stephane Haquard5, Xiangdong Fu3,4,* and Yang Bai1,2,3,*"
+date: "2019/3/31"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Important file list
+
+
+## Figures
+
+- [Figure 2. Si-QAP is more accurate than classical profiling based on relative abundance, as revealed by the bacterial mock experiments.](./Fig/Figure2.html) [**PDF**](./Fig/Figure2.pdf) [**Rmd**](./Fig/Figure2.rmd)
+
+- [Figure 3. Si-QAP is more accurate than classical profiling based on relative abundance, as revealed by the fungal mock experiments.](./Fig/Figure3.html) [**PDF**](./Fig/Figure3.pdf) [**Rmd**](./Fig/Figure3.rmd)
+
+- [Figure 4. Si-QAP reveals a reduction in microbial load in perturbed natural root samples.](./Fig/Figure4.html) [**PDF**](./Fig/Figure4.pdf) [**Rmd**](./Fig/Figure4.rmd)
+
+- [Figure 5. Si-QAP revealed microbial load increase in rice roots under drought stress. ](./Fig/Figure5.html) [**PDF**](./Fig/Figure5.pdf) [**Rmd**](./Fig/Figure5.rmd)
+
+- [Figure 6. Si-QAP revealed microbial load increase in wheat root rot disease. ](./Fig/Figure6.html) [**PDF**](./Fig/Figure6.pdf) [**Rmd**](./Fig/Figure6.rmd)
+
+
+
+## Supplement Figures
+
+
+- [Figure S1. The Si-QAP method reveals the increase in bacterial load, which could not be detected by the classical method based on relative abundance. ](./Fig/FigureS1.html)[**PDF**](./Fig/FigureS1.pdf)
+- [Figure S2. The Si-QAP method reveals improved detection of the increases in Actinobacteria, Bacteroidetes, and Firmicutes levels and that the quantitative abundance of Proteobacteria does not change when the amounts of other bacteria increase.](./Fig/FigureS2.html)[**PDF**](./Fig/FigureS2.pdf)
+- [Figure S3. The Si-QAP method reveals the increase in fungal load, which could not be detected by the classical method based on relative abundance.](./Fig/FigureS3.html)[**PDF**](./Fig/FigureS3.pdf)
+- [Figure S4. The Si-QAP method more accurately detects the increase in Basidiomycota levels and reveals that the quantitative abundance of Ascomycota does not change when the levels of the other fungal isolates increase.](./Fig/FigureS4.html)[**PDF**](./Fig/FigureS4.pdf)
+- [Figure S5. The spike-in plasmid does not influence the relative abundance of bacterial or fungal OTUs in natural root samples.](./Fig/FigureS5.html)[**PDF**](./Fig/FigureS5.pdf)
+- [Figure S6. The spike-in plasmid does not affect the alpha indexes of bacterial and fungal communities in natural rice roots. ](./Fig/FigureS6.html)[**PDF**](./Fig/FigureS6.pdf)
+- [Figure S7. The Si-QAP method reveals a reduction in microbial load in perturbed natural root samples. ](./Fig/FigureS7.html)[**PDF**](./Fig/FigureS7.pdf)
+- [Figure S8. Drought treatment shapes the overall composition of rice root-associated bacterial and fungal communities.](./Fig/FigureS8.html)[**PDF**](./Fig/FigureS8.pdf)
+- [Figure S9. The microbial load of the rice root microbiome increases under drought stress at the Anhui Farm, as revealed by spike-in-based quantitative abundance profiling.](./Fig/FigureS9.html)[**PDF**](./Fig/FigureS9.pdf)
+
+
+## Supplment Tables
+
+
+- [Table S1. Summary of the dose-response curves for bacterial mock communities.](./Table/TableS1.xlsx)
+- [Table S2. Summary of Wilcoxon rank-sum test for bacterial mock communities.](./Table/TableS2.xlsx)
+- [Table S3. Summary of three groups of mock communities. ](./Table/TableS3.xlsx)
+- [Table S4. Overview of fold change between Group 2 and Group 1 in the bacterial mock community based on RAP and Si-QAP, respectively.](./Table/TableS4.xlsx)
+- [Table S5. Overview of two-tailed Student’s t-test for four proteobacterial strains in the bacterial mock community based on RAP and Si-QAP, respectively.](./Table/TableS5.xlsx)
+- [Table S6. Overview of fold change between Group 3 and Group 1 in the bacterial mock community based on RAP and Si-QAP, respectively. ](./Table/TableS6.xlsx)
+- [Table S7. Summary of the dose-response curves for fungal mock communities.  ](./Table/TableS7.xlsx)
+- [Table S8. Summary of Wilcoxon rank-sum test for fungal mock communities.  ](./Table/TableS8.xlsx)
+- [Table S9. Overview of fold change between Group 2 and Group 1 in the fungal mock community based on RAP and Si-QAP, respectively.](./Table/TableS9.xlsx)
+- [Table S10.  Overview of two-tailed Student’s t-test for two Ascomycota  strains in the fungal mock community based on RAP and Si-QAP, respectively.](./Table/TableS10.xlsx)

@@ -1,0 +1,90 @@
+---
+title: "FigureS3"
+author: "Qin Yuan"
+date: "2019/4/1"
+output: html_document
+---
+
+
+```{r warning=FALSE, message=FALSE}
+rm(list=ls()) 
+
+library(ggplot2)
+library(ggpubr)
+library(dplyr)
+library(tidyr)
+```
+
+
+## Fig S3
+
+```{r}
+fun_ra <- read.csv("data/Fig3c-bar-ra.csv", header = T)
+table_fun_ra_r <- gather(fun_ra,  key = sample , value = count, `sample01`:`sample04`)
+table_fun_ra <- table_fun_ra_r
+table_fun_ra$fungi <- factor(table_fun_ra_r$fungi)
+table_fun_ra$group <- factor(table_fun_ra_r$group)
+
+fun_aa <- read.csv("data/Fig3d-bar-aa.csv", header = T)
+table_fun_aa_r <- gather(fun_aa,  key = sample , value = count, `sample01`:`sample04`)
+table_fun_aa <- table_fun_aa_r
+table_fun_aa$fungi <- factor(table_fun_aa_r$fungi)
+table_fun_aa$group <- factor(table_fun_aa_r$group)
+```
+
+
+```{r}
+E05_fun_ra <- filter(table_fun_ra, spike == "E05")
+E55_fun_ra <- filter(table_fun_ra, spike == "E055")
+E04_fun_ra <- filter(table_fun_ra, spike == "E04")
+FigS3S4_fun_ra <- rbind(E05_fun_ra, E55_fun_ra, E04_fun_ra)
+
+group1_FigS3S4_fun_ra <- filter(FigS3S4_fun_ra , group == "1:01:01")
+group2_FigS3S4_fun_ra <- filter(FigS3S4_fun_ra , group == "2:02:02")
+
+E05_fun_aa <- filter(table_fun_aa, spike == "E05")
+E55_fun_aa <- filter(table_fun_aa, spike == "E055")
+E04_fun_aa <- filter(table_fun_aa, spike == "E04")
+FigS3S4_fun_aa <- rbind(E05_fun_aa, E55_fun_aa, E04_fun_aa)
+
+group1_FigS3S4_fun_aa <- filter(FigS3S4_fun_aa , group == "1:01:01")
+group2_FigS3S4_fun_aa <- filter(FigS3S4_fun_aa , group == "2:02:02")
+
+FigS6_ra_g1g2 <- rbind(group1_FigS3S4_fun_ra, group2_FigS3S4_fun_ra)
+FigS6_aa_g1g2 <- rbind(group1_FigS3S4_fun_aa, group2_FigS3S4_fun_aa)
+
+FigS6_ra_g1g2$spike <- factor(FigS6_ra_g1g2$spike,levels=c("E05","E055", "E04"))
+FigS6_aa_g1g2$spike <- factor(FigS6_aa_g1g2$spike,levels=c("E05","E055", "E04"))
+```
+
+
+```{r}
+FigS6_ra <- ggplot(FigS6_ra_g1g2) +
+  geom_boxplot(aes(x = fungi, y = count, fill = group), width = 0.3, na.rm = TRUE) +
+  scale_fill_manual(values=c("#9acd32","#ffa07a"))+
+  geom_line(aes(x = fungi, y = mean, group = group, color = group), na.rm = TRUE) +
+  facet_wrap(~spike, ncol = 3, as.table = TRUE) +
+  labs(x="Fungi", y="Relative abundance (%)")  +
+  scale_x_discrete(limits=c("Basi-AF78","Asco-AF1","Asco-AF105"))+
+  scale_color_manual(values=c("#9acd32","#ffa07a"))+
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = -45, vjust = 1, hjust = 0))
+FigS6_ra
+# 
+# ggsave(paste("result/FigS6-ra.pdf", sep=""), FigS6_ra, width = 9, height = 5)
+
+FigS6_aa <- ggplot(FigS6_aa_g1g2) +
+  geom_boxplot(aes(x = fungi, y = count, fill = group), width = 0.3, na.rm = TRUE) +
+  scale_fill_manual(values=c("#9acd32","#ffa07a"))+
+  geom_line(aes(x = fungi, y = mean, group = group, color = group), na.rm = TRUE) +
+  facet_wrap(~spike, ncol = 3, as.table = TRUE) +
+  labs(x="Fungi", y="Quantitative abundance (relative to plant)")  +
+  scale_x_discrete(limits=c("Basi-AF78","Asco-AF1","Asco-AF105"))+
+  scale_color_manual(values=c("#9acd32","#ffa07a"))+
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = -45, vjust = 1, hjust = 0))
+FigS6_aa
+# 
+# ggsave(paste("result/FigS6_aa.pdf", sep=""), FigS6_aa, width = 9, height = 5)
+
+```
