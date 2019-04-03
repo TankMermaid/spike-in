@@ -1,4 +1,4 @@
-# Spike-in quantitative abundance profiling reveals 1 the microbial load  variation of the root microbiome
+# Spike-in quantitative abundance profiling reveals the microbial load  variation of the root microbiome
 
 contributed by Tank and Yuan Qin
 
