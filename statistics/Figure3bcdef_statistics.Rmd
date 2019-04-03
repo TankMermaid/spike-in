@@ -1,0 +1,392 @@
+---
+title: "Figure3bcdef_statistics"
+author: "Tank"
+date: "2018/11/30"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r fungi}
+## This scripot is meant to draw the relative abundance with SpikeIn and without SpikeIn  for fungi
+## these scripts are based on the single_rarefraction result
+## Tank 
+
+## Email:xnzhang@genetics.ac.cn
+
+rm(list = ls())
+setwd("/mnt/bai/xiaoning/xiaoxuan/180213/fun_New/")
+print(paste("Your working directory is in",getwd()))
+
+library(ggplot2)
+library(reshape)
+library(multcomp)
+library(ggsignif)
+library(vegan)
+library(ggpubr)
+source("script/plot_function.R")
+
+### output directory assigned to include the pics & tables########################
+# figures.dir <- paste("/mnt/bai/xiaoning/xiaoxuan/180213/bac_New/figure/",tem,'/',sep = '')
+# table.dir <- paste("/mnt/bai/xiaoning/xiaoxuan/180213/bac_New/table/",tem,'/',sep = '')
+
+
+design = read.table("doc/design.txt", header=T, row.names= 1, sep="\t") 
+
+## the applicaiton of subset & !  for short without the $
+## if row not to use select in subset function
+sub_design <- subset(design,PlasmidID == "Scal-BI-12-4"& Other %in% c("2:2:2","2:2:1","1:1:1" ))
+# sub_design <- subset(design,PlasmidID == "Scal-BI-12-4" & Other == "2:02:02")
+
+
+## remove outlier sample
+pos1 <- grep("*02$|*07$|*08$",rownames(sub_design))
+sub_design_filt <- sub_design[-pos1,]
+
+l1 = read.delim("data/usearch_map_L1/observation_table.txt", row.names= 1,  header=T, sep="\t")
+l2 = read.delim("data/usearch_map_L2/observation_table.txt", row.names= 1,  header=T, sep="\t")
+l3 = read.delim("data/usearch_map_L3/observation_table.txt", row.names= 1,  header=T, sep="\t")
+l4 = read.delim("data/usearch_map_L4/observation_table.txt", row.names= 1,  header=T, sep="\t")
+l5 = read.delim("data/usearch_map_L5/observation_table.txt", row.names= 1,  header=T, sep="\t")
+
+## modification of control with spike-in with dummy variable to facilitate the merge operation
+dumm <- replicate(15,0)
+l5 <- rbind(l5,dumm)
+rownames(l5)[5] <- "BI-OS-12-4"
+
+l1$ID <- rownames(l1)
+l2$ID <- rownames(l2)
+l3$ID <- rownames(l3)
+l4$ID <- rownames(l4)
+l5$ID <- rownames(l5)
+
+
+merge_sp12 <- merge(l1,l2, by = "ID")
+merge_sp34 <- merge(l3,l4, by = "ID")
+merge_sp <- merge(merge_sp12,merge_sp34,by = "ID")
+
+## add l5 as control E00
+merge_sp <- merge(merge_sp,l5)
+rownames(merge_sp) <- merge_sp$ID
+merge_sp$ID <- NULL
+
+
+## ----Pseudocount to  escape the error of division of 0---------------------------------------------------------
+sub_table <- merge_sp+1
+
+##------------------filter samples not mapping to sub_design-----------------------
+sub_table_f <- sub_table[,colnames(sub_table) %in% rownames(sub_design_filt)]
+sub_design_filt <- sub_design_filt[rownames(sub_design_filt) %in% colnames(sub_table_f),]
+
+## remove "BI-OS-10-2"
+sub_table_f <- sub_table_f[-c(3,5,6),]
+set.seed(21336)
+# rrarefy The sample can be a vector giving the sample sizes for each row.so you need the transpose
+##rarefy(x, sample, se = FALSE, MARGIN = 1) rrarefy(x, sample)
+sub_table_f<- as.data.frame(t(rrarefy(t(sub_table_f),sample = min(colSums(sub_table_f)))))
+colSums(sub_table_f)
+# write.table(sub_table,file = "../bac_New/table/bac_OTU_rarefy.txt",sep = '\t',row.names = T,quote = F)
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------
+# spike BI-12-4
+##### spike-in design in this batch #####################
+spike <- c("BI-OS-11-3","BI-OS-12-4","BI-OS-10-2")
+idx <- match(spike[2],row.names(sub_table_f))
+sub_table_2 <- sub_table_f[-idx,]
+
+
+####relAbundance without spike-in
+relAbundance <- sweep(sub_table_2,2,colSums(sub_table_2),'/')
+
+####### reorder ##########
+ord <- match(rownames(sub_design_filt),colnames(relAbundance))   ## column rearrange
+# ord1 <- match(rownames(bac_li), rownames(sub_table))    ## row reorder
+relAbundance<- relAbundance[,ord]   ## parrellel
+write.table(relAbundance,file = "./table/relAbundance.xls",sep = '\t',row.names = T)
+
+
+
+####relAbundance with spike-in
+relAbun_withSpike <- sweep(sub_table_f,2,colSums(sub_table_f),'/')
+
+####### reorder ##########
+ord <- match(rownames(sub_design_filt),colnames(relAbun_withSpike))   ## column rearrange
+# ord1 <- match(rownames(bac_li), rownames(sub_table))    ## row reorder
+relAbun_withSpike<- relAbun_withSpike[,ord]   ## parrellel
+write.table(relAbun_withSpike,file = "./table/relAbun_withSpike.xls",sep = '\t',row.names = T)
+
+
+
+
+###### join design and melt for ggplot 
+melt_design <- sub_design[rownames(sub_design) %in% colnames(relAbundance),]
+# melt_design$spike_concentration <-NULL 
+idx <- match(rownames(melt_design),rownames(t(relAbundance)))
+t_ra <- as.data.frame(t(relAbundance)[idx,])
+df <- cbind(melt_design,t_ra)
+df$spike_concentration <- NULL
+
+
+#### setting parametres of plotting
+Mock_ratio <- unique(melt_design$Other)
+Concentration <- unique(melt_design$Description)
+
+index <- melt(df)
+Species <- unique(index$variable)
+
+colors <- data.frame(group=Mock_ratio,
+                     color=c(c_red, c_dark_brown,c_black))
+
+# colors <- data.frame(group=Species,
+# color=c(c_red, c_dark_brown,c_black,c_dark_brown,c_dark_red,c_green,c_orange,c_sea_green,c_very_dark_green,c_yellow))
+
+
+
+shapes <- data.frame(group=Species,
+                     shape=c(19, 0, 24))
+
+color_con <- data.frame(group=Concentration,
+                        color=c(c_red, c_dark_brown,c_black,c_green,c_yellow))
+
+index$Species <- factor(index$variable, levels=shapes$group)
+index$Mock_ratio <- factor(index$Other, levels=colors$group)
+index$Concentration <- factor(index$Description,levels =color_con$group )
+
+# 
+# p <- ggplot(index[Mock_ratio %in% "2:2:2",], aes(x=Concentration, y=value, shape=Species,color=Species)) +
+#   # facet_wrap(~,scales = "free")+
+#   geom_boxplot(alpha=1, outlier.size=0, size=0.7, width=0.4, fill="transparent") +
+#   # geom_point()+
+#   geom_jitter(aes(shape=Species), position=position_jitter(0.07), size=1, alpha=0.7) +
+#   # scale_colour_manual(values=as.character(colors$color)) +
+#   # scale_shape_manual(values=shapes$shape) +
+#   labs(x="Mock Concentration Ratio", y="spike-in_Abundance") +
+#   theme(axis.text.x = element_text(size=10,angle = 90))+
+#   main_theme
+# 
+# p
+# 
+# ggsave("./figure/mock_concentrationVSspike_in_Abundance.pdf", p)
+
+# p <- ggplot(index, aes(x=Species, y=value, color=Mock_ratio)) +
+#   facet_wrap(~Concentration,scales = "free")+
+#   geom_boxplot(alpha=1, outlier.size=0, size=0.7, width=0.4, fill="transparent") +
+#   geom_jitter(aes(shape=Concentration), position=position_jitter(0.07), size=1, alpha=0.7) +
+#   scale_colour_manual(values=as.character(colors$color)) +
+#   scale_shape_manual(values=shapes$shape) +
+#   labs(x="Mock ratio", y="spike-in_Abundance") +
+#   theme(axis.text.x = element_text(size=10,angle = 90))+
+#   main_theme
+# 
+# p
+
+# data("ToothGrowth")
+# dfcc <- ToothGrowth
+# compare_means(len ~ dose, dfcc, ref.group = "0.5")
+
+colnames(df)[10:12] <- gsub("-","",colnames(df)[10:12])
+gsub("\"","",c("Act101" , "Act135" , "Act140" , "Act322" , "Bac186",  "Fir11" ,  "Pro1203", "Pro1204", "Pro670" , "Pro672"))
+
+fungi_ra_statics_figure3b <- compare_means(c(AscoAF1 , AscoAF105  , BasiAF78 ) ~ Description, 
+                                df, 
+                                method="wilcox.test", 
+                                paired=FALSE, 
+                                group.by= "Other", 
+                                ref.group ="E00" )
+
+
+
+# write.table(fungi_ra_statics_figure3b,file = "./table/1125_fungi_ra_wilcox_dunnet.txt",quote = FALSE,sep = '\t')
+write.table(fungi_ra_statics_figure3b,file = "./table/1125_fungi_ra_wilcox_dunnet_figure3b.txt",quote = FALSE,sep = '\t')
+
+
+
+fungi_ra_statics_t_figure3b <- compare_means(c(AscoAF1 , AscoAF105  , BasiAF78 ) ~ Description, 
+                                  df, 
+                                  method="t.test", 
+                                  paired=FALSE, 
+                                  group.by= "Other", 
+                                  ref.group ="E00" )
+
+write.table(fungi_ra_statics_t_figure3b,file = "./table/1125_fungi_ra_ttest_dunnet_figure3b.txt",quote = FALSE,sep = '\t')
+
+
+fungi_ra_statics_figure3c3e <- compare_means(c(AscoAF1 , AscoAF105 , BasiAF78 ) ~ Other, 
+                                  df, 
+                                  method="wilcox.test", 
+                                  paired=FALSE, 
+                                  group.by= "Description", 
+                                  ref.group ="1:1:1" )
+
+write.table(fungi_ra_statics_figure3c3e,file = "./table/1125_fungi_ra_wilcox_dunnet_figure3c3e_allcompare.txt",quote = FALSE,sep = '\t')
+
+fungi_ra_statics_t_figure3c3e <- compare_means(c(AscoAF1 , AscoAF105 ,  BasiAF78 ) ~ Other, 
+                                  df, 
+                                  method="t.test", 
+                                  paired=FALSE, 
+                                  group.by= "Description", 
+                                  ref.group ="1:1:1" )
+
+
+write.table(fungi_ra_statics_t_figure3c3e,file = "./table/1125_fungi_ra_ttest_dunnet_figure3c3e_allcompare.txt",quote = FALSE,sep = '\t')
+
+fungi_ra_statics_figure3c3e_e520 <- compare_means(c(AscoAF1 , AscoAF105 , BasiAF78 ) ~ Other, 
+                                             df[df$Description %in% "E05/20",], 
+                                             method="wilcox.test", 
+                                             paired=FALSE, 
+                                             # group.by= "Description", 
+                                             ref.group ="1:1:1" )
+
+write.table(fungi_ra_statics_figure3c3e_e520,file = "./table/1125_fungi_ra_wilcox_dunnet_figure3c3e_e520.txt",quote = FALSE,sep = '\t')
+
+fungi_ra_statics_t_figure3c3e_e520 <- compare_means(c(AscoAF1 , AscoAF105 , BasiAF78 ) ~ Other, 
+                                              df[df$Description %in% "E05/20",], 
+                                               method="t.test", 
+                                               paired=FALSE, 
+                                               # group.by= "Description", 
+                                               ref.group ="1:1:1" )
+
+
+write.table(fungi_ra_statics_t_figure3c3e_e520,file = "./table/1125_fungi_ra_ttest_dunnet_figure3c3e_e520.txt",quote = FALSE,sep = '\t')
+
+
+write.table(df,file = "./table/1125_fungi_mock_ra_table_figure3c3e.txt",quote = FALSE,sep = '\t')
+
+
+
+
+
+spike <- c("BI-OS-11-3","BI-OS-12-4","BI-OS-10-2")
+idx <- match(spike[2],row.names(sub_table_f))
+sub_table_2 <- sub_table_f[-idx,]
+
+####absAbundance relative to spike-in
+absAbundance <- sweep(sub_table_2,2,as.numeric(sub_table_f[idx,]),'/')
+
+####### reorder ##########
+
+ord <- match(rownames(sub_design_filt),colnames(absAbundance))   ## column rearrange
+# ord1 <- match(rownames(bac_li), rownames(sub_table))    ## row reorder
+absAbundance<- absAbundance[,ord]   ## parrellel
+write.table(absAbundance,file = "./table/absAbundance.xls",sep = '\t',row.names = T)
+
+
+
+###### join design and melt for mean and ggplot 
+melt_design <- sub_design_filt[rownames(sub_design_filt) %in% colnames(absAbundance),]
+# melt_design$spike_concentration <-NULL 
+idx <- match(rownames(melt_design),rownames(t(absAbundance)))
+t_ra <- as.data.frame(t(absAbundance)[idx,])
+df <- cbind(melt_design,t_ra)
+
+
+
+Mock_ratio <- unique(melt_design$Other)
+Concentration <- unique(melt_design$Description)
+
+index <- melt(df)
+Species <- unique(index$variable)
+
+colors <- data.frame(group=Mock_ratio,
+                     color=c(c_red, c_dark_brown,c_black))
+
+# colors <- data.frame(group=Species,
+# color=c(c_red, c_dark_brown,c_black,c_dark_brown,c_dark_red,c_green,c_orange,c_sea_green,c_very_dark_green,c_yellow))
+
+
+
+shapes <- data.frame(group=Species,
+                     shape=c(19, 0, 24))
+
+color_con <- data.frame(group=Concentration,
+                        color=c(c_red, c_dark_brown,c_black,c_green,c_yellow))
+
+index$Species <- factor(index$variable, levels=shapes$group)
+index$Mock_ratio <- factor(index$Other, levels=colors$group)
+index$Concentration <- factor(index$Description,levels =color_con$group )
+
+# 
+# p <- ggplot(index[Mock_ratio %in% "2:2:2",], aes(x=Concentration, y=value, shape=Species,color=Species)) +
+#   # facet_wrap(~,scales = "free")+
+#   geom_boxplot(alpha=1, outlier.size=0, size=0.7, width=0.4, fill="transparent") +
+#   # geom_point()+
+#   geom_jitter(aes(shape=Species), position=position_jitter(0.07), size=1, alpha=0.7) +
+#   # scale_colour_manual(values=as.character(colors$color)) +
+#   # scale_shape_manual(values=shapes$shape) +
+#   labs(x="Mock Concentration Ratio", y="spike-in_Abundance") +
+#   theme(axis.text.x = element_text(size=10,angle = 90))+
+#   main_theme
+# 
+# p
+# 
+# ggsave("./figure/mock_concentrationVSspike_in_Abundance.pdf", p)
+
+# p <- ggplot(index, aes(x=Species, y=value, color=Mock_ratio)) +
+#   facet_wrap(~Concentration,scales = "free")+
+#   geom_boxplot(alpha=1, outlier.size=0, size=0.7, width=0.4, fill="transparent") +
+#   geom_jitter(aes(shape=Concentration), position=position_jitter(0.07), size=1, alpha=0.7) +
+#   scale_colour_manual(values=as.character(colors$color)) +
+#   scale_shape_manual(values=shapes$shape) +
+#   labs(x="Mock ratio", y="spike-in_Abundance") +
+#   theme(axis.text.x = element_text(size=10,angle = 90))+
+#   main_theme
+# 
+# p
+
+# data("ToothGrowth")
+# dfcc <- ToothGrowth
+# compare_means(len ~ dose, dfcc, ref.group = "0.5")
+
+colnames(df)[10:12] <- gsub("-","",colnames(df)[10:12])
+gsub("\"","",c("Act101" , "Act135" , "Act140" , "Act322", "Bac186",  "Fir11" ,  "Pro1203", "Pro1204", "Pro670" , "Pro672"))
+
+
+
+fungi_aa_statics_figure3d3f <- compare_means(c(AscoAF1 , AscoAF105 , BasiAF78 ) ~ Other, 
+                                             df[!df$Description %in% "E00",], 
+                                             method="wilcox.test", 
+                                             paired=FALSE, 
+                                             group.by= "Description", 
+                                             ref.group ="1:1:1" )
+
+write.table(fungi_aa_statics_figure3d3f ,file = "./table/1125_fungi_aa_wilcox_dunnet_figure3d3f_allcompare.txt",quote = FALSE,sep = '\t')
+
+fungi_aa_statics_t_figure3d3f <- compare_means(c(AscoAF1 , AscoAF105  , BasiAF78 ) ~ Other, 
+                                               df[!df$Description %in% "E00",], 
+                                               method="t.test", 
+                                               paired=FALSE, 
+                                               group.by= "Description",
+                                               ref.group ="1:1:1" )
+
+write.table(fungi_aa_statics_t_figure3d3f ,file = "./table/1125_fungi_aa_ttest_dunnet_figure3d3f_allcompare.txt",quote = FALSE,sep = '\t')
+
+fungi_aa_statics_figure3d3f_e520 <- compare_means(c(AscoAF1 , AscoAF105  , BasiAF78 ) ~ Other, 
+                                                  df[df$Description %in% "E05/20",], 
+                                                  method="wilcox.test", 
+                                                  paired=FALSE, 
+                                                  # group.by= "Description", 
+                                                  ref.group ="1:1:1" )
+
+write.table(fungi_aa_statics_figure3d3f_e520,file = "./table/1125_fungi_aa_wilcox_dunnet_figure3d3f_e520.txt",quote = FALSE,sep = '\t')
+
+fungi_aa_statics_t_figure3d3f_e520 <- compare_means(c(AscoAF1 , AscoAF105  , BasiAF78 ) ~ Other, 
+                                                    df[df$Description %in% "E05/20",], 
+                                                    method="t.test", 
+                                                    paired=FALSE, 
+                                                    # group.by= "Description", 
+                                                    ref.group ="1:1:1" )
+
+
+write.table(fungi_aa_statics_t_figure3d3f_e520,file = "./table/1125_fungi_aa_ttest_dunnet_figure3d3f_e520.txt",quote = FALSE,sep = '\t')
+
+
+write.table(df,file = "./table/1125_fungi_mock_aa_table_figure3d3f.txt",quote = FALSE,sep = '\t')
+
+
+
+```
+
