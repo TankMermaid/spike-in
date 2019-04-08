@@ -75,22 +75,6 @@ id <- grep("OTU_4$",row.names(otu_table))
 otu_table <- otu_table[-id,]
 id <- grep("OTU_39$",row.names(otu_table))
 
-
-# mock_otu = read.table("result/unoise/candidate_otu_12.txt",  header=F, sep="\t")
-# otu_table = read.delim("usearch/observation_table.txt", row.names= 1,  header=T, sep="\t")
-# otu_table$id <- row.names(otu_table)
-# otu_table = read.delim("usearch_map_L4/observation_table.txt", row.names= 1,  header=T, sep="\t")
-# otu_table = read.delim("usearch_map_L4/observation_table.txt", row.names= 1,  header=T, sep="\t")
-# otu_table = read.delim("usearch_map_L4/observation_table.txt", row.names= 1,  header=T, sep="\t")
-# otu_table1 = read.delim("bwa-short_map_L4_1.0/observation_table.txt",  header=T, sep="\t")
-
-
-# sub_table <- otu_table[,c(ncol(otu_table),colnames(otu_table) %in%  rownames(sub_design))]
-# otu_table[otu_table$taxonomy %in% "Unclassified",]
-
-
-
-
 ############################################################subSet OTU for analysis nature sample feature otu distribution ########################
 sub_table <- otu_table[,colnames(otu_table) %in% rownames(sub_design)]
 # sub_table <- otu_table[,colnames(otu_table) %in%  rownames(sub_design)]
@@ -211,76 +195,7 @@ shapes <- data.frame(group=mix_ratio_group,
 index$Other <- factor(index$Other, levels=shapes$group)
 index$Description <- factor(index$Description, levels=colors$group)
 index$Mix_Ratio <- index$Other
-# reorder boxplots
 
-# l <- c("soil", "rhizosphere", "root", "pooled_nodules")
-# index$compartment <- factor(index$compartment, levels=l)
-# colors <- colors[match(l, colors$group), ]
-
-
-detailName <- paste("Natural_fungal_Community_Concentration",spike[2],sep = '_')
-
-p <- ggplot(index, aes(x=Mix_Ratio, y=value, color=Description)) +
-  geom_boxplot(alpha=1, outlier.size=0, size=0.7, width=0.4, fill="transparent") +
-  geom_jitter(aes(shape=Mix_Ratio), position=position_jitter(0.17), size=1, alpha=0.7) +
-  scale_colour_manual(values=as.character(colors$color)) +
-  scale_shape_manual(values=shapes$shape) +
-  labs(x=detailName, y="spike-in_Abundance") +
-  theme(axis.text.x = element_text(size=7.5,angle = 90))+
-  main_theme
-
-
-p
-
-# ggsave(paste(figures.dir, detailName,"spike_in_Abundance.pdf", sep="_"), p)
-
-## to save in the new directory
-# ggsave("../fun_New/figure/perturbation_unoise_fung/spike_in_Abundance.pdf",  p)
-# write.table(index,file = "./table/spike_in_Abundance_fun.xls",sep = '\t',row.names = T)
-
-
-#plot RA 
-
-idx1 <- match("spike-in_Abundance",colnames(t_table))
-idx2 <- match("delta_value",colnames(t_table))
-index <- cbind(design[match(t_table[,length(t_table[1,])], design$SampleID), ], total_table[, -c(idx2,idx1)])
-index<- index[,c(1:25,grep("OTU_2$",colnames(index)))]
-
-colors <- data.frame(group=cl_group,
-                     color=c(c_red, c_dark_brown,c_black,c_orange,c_sea_green,c_yellow,c_green))
-
-
-shapes <- data.frame(group=mix_ratio_group,
-                     shape=c(19, 0, 24))
-
-#,c_sea_green,c_yellow,c_green,c_very_dark_green,"purple","pink",c_dark_red
-
-index$Other <- rep(c("One_fold_plant","Two_fold_plant","Fun_spike_perturbation"),each=3,4)
-# index$Other <- factor(index$Other, levels=shapes$group)
-index$Description <- factor(index$Description, levels=colors$group)
-index$Mix_Ratio <- index$Other
-
-df <- melt(index)
-
-mean_table <- aggregate(df$value,by = list(df$Mix_Ratio,df$Description,df$variable),FUN = mean)
-mean_table$variable <- rownames(mean_table)
-colnames(mean_table)[4] <- 'value'
-p <- ggplot(mean_table, aes(x=Group.3,y=value,color=Group.2)) +
-  facet_wrap(Group.1~Group.2,scales = "free")+
-  geom_boxplot(alpha=1, outlier.size=0, size=0.7, width=0.4, fill="transparent") +
-  geom_jitter(aes(shape=Group.3), position=position_jitter(0.17), size=1, alpha=0.7) +
-  scale_colour_manual(values=as.character(colors$color)) +
-  scale_shape_manual(values=shapes$shape) +
-  labs(x=detailName, y="RA_mean") +
-  theme(axis.text.x = element_text(size=10,angle = 90))+
-  main_theme
-
-p
-
-
-# ggsave(paste(figures.dir,"Facet_Natural_fung_RA_mean_box_line_chart.pdf", sep=""), p)
-# ggsave("../fun_New/figure/perturbation_unoise_fung/Facet_Natural_fung_RA_mean_box_line_chart.pdf", p)
-# write.table(mean_table,file = "./table/Facet_Natural_fung_RA_mean_box_line_chart.xls",sep = '\t',row.names = T)
 
 #### alpha diversity comparison 
 
@@ -288,39 +203,54 @@ shannon <- as.data.frame(diversity(sub_table_2[-1,-ncol(sub_table_2)],index = "s
 colnames(shannon)[1] <- "shannon_value"
 
 index <- cbind(sub_design_1,shannon)
-
-
-##rep usage each and times
-# remove.packages("rlang")
-# packageurl <- "https://cran.r-project.org/src/contrib/Archive/rlang/rlang_0.1.tar.gz"
-# install.packages(packageurl, repos=NULL, type="source")
-# detach("rlang")
-# 
-# rm("rlang")
-# library(rlang)
-# session_info()
-
-# require(devtools)
-# install_version("rlang",version = "0.2.2",）
-
-
 index$Other <- rep(c("One_fold_plant","Two_fold_plant","Fun_spike_perturbation"),each=3,4)
 df <- melt(index)
+df$Description <- factor(df$Description,levels = c("E00","E05/5","E03","E04"))
 
 com_t<- compare_means( value ~ Description, data = df[!df$Description %in% "E04",], method = "wilcox.test" ,group.by = "Other", paired = FALSE)
-head(com_t)
+# head(com_t)
 
 # write.table(com_t,file = "./table/fun_alpha_shannon_pvalue.txt",sep = '\t',row.names = T)
 
 my_comparisons <- list(c("E05/5", "E00"), c("E03", "E00"))
 
-p <- ggboxplot(df[!df$Description %in% "E04",], x="Description",y = "value", color = "Description", 
-               palette = "jco", add = "jitter",
-               facet.by = "Other", short.panel.labs = FALSE)
+# p <- ggboxplot(df[!df$Description %in% "E04",], x="Description",y = "value", color = "Description", 
+#                palette = "jco", add = "jitter",
+#                facet.by = "Other", short.panel.labs = FALSE)
+# p
+# #添加成对p值
+# a_p<- p + stat_compare_means(method = "wilcox.test", comparisons = my_comparisons,
+#                              label.y=c(5,7,9))
+# a_p
+
+
+
+
+p <- ggplot(df[!df$Description %in% "E04"&df$Other %in% "One_fold_plant",], aes(x=Description, y=value)) +
+  geom_boxplot(alpha=1, outlier.size=0, size=0.7, width=0.5, fill=rep(c(c_black, c_black,c_black),1)) +
+  geom_jitter(aes(shape=Description,color=Description), position=position_jitter(0.17), size=1, alpha=0.7) +
+  labs(x="Spike-in amounts (copies/reaction)", y="Fungal shannon index") +
+  # geom_signif(comparisons =list(c("E05/5", "E00")),
+  #             annotations = "No Sig.",
+  #             y_position = 4.8,tip_length = 0, vjust=0.4,
+  #             map_signif_level = T)+
+  # # geom_signif(comparisons =list(c("E04", "E00")),
+  # #             annotations = "No Sig.",
+  # #             y_position = 4.73,tip_length = 0.01, vjust=0.4,
+  # #             map_signif_level = T)+
+  # geom_signif(comparisons =list(c("E03", "E00")),
+  #             annotations = "No Sig.",
+  #             y_position = 4.65,tip_length = 0.01, vjust=0.4,
+#             map_signif_level = T)+
+# facet_wrap(~Other)+
+  scale_colour_manual(values=c(c_red,c_dark_brown,"purple")) +
+  scale_shape_manual(values=c(19,24,3)) +
+  stat_compare_means(label="p.signif", method = "wilcox.test", comparisons = my_comparisons,
+                     label.y=c(6.2,6.5))+
+  main_theme
+
 p
-#添加成对p值
-a_p<- p + stat_compare_means(method = "wilcox.test", comparisons = my_comparisons,
-                             label.y=c(5,7,9))
-a_p
+
+
 ```
 
