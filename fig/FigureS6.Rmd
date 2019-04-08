@@ -9,9 +9,236 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE, warning = F,message = F)
 ```
 
-## FigureS6 Fungi shannon index and statistics
+
+## FigureS6a Bacteria shannon index and statistics(Unoise version)
 
 ```{r}
+rm(list=ls())
+
+########### setting the working directory and print it ###################
+tem <- "Nature_disturbation_OTU_E05-5"
+setwd("~/xiaoxuan/180213/bac/")
+print(paste("Your working directory is in",getwd()))
+
+
+########### to import the plotting theme() function ########################
+source("plot_function.R")
+# install.packages("ggpubr")
+library(ggpubr)
+library(vegan)
+library(ggplot2)
+library(reshape)
+# library(multcomp)
+library(ggsignif)
+
+### output directory assigned to include the pics & tables########################
+figures.dir <- paste("~/xiaoxuan/180213/bac/plot/Unoise/",tem,'/',sep = '')
+table.dir <- paste("~/xiaoxuan/180213/bac/table/",tem,'/',sep = '')
+
+
+fig_flag <- dir.exists(figures.dir)
+if( isTRUE(!fig_flag)){
+  dir.create(figures.dir)
+}
+
+tab_flag <- dir.exists(table.dir)
+if( isTRUE(!tab_flag)){
+  dir.create(table.dir)
+}
+####################################
+
+
+#####spike-in design in this batch #####################
+spike <- c("BI-OS-11-3","BI-OS-12-4","BI-OS-10-2")
+
+
+#1 design Mapping file and Sample id
+design = read.table("doc/design.txt", header=T, row.names= 1, sep="\t") 
+design$SampleID <- row.names(design)
+sample_list <- as.matrix(row.names(design))
+
+ids <- design$Other %in% c("2:2:2","1:1:1","2:2:1")
+
+sub_design <- design[!ids,]
+# sub_design <- design[ids,]
+
+
+#2 bacteria_list to filter 
+fungl_li = read.delim("doc/bacterial_list.txt",row.names = 1, header=T, sep="") 
+rownames(fungl_li)
+
+#3 OTUs file
+
+otu_table = read.table("result/unoise/otu_table_tax.txt", row.names= 1,  header=1, sep="\t")
+
+id <- grep("OTU_1$",row.names(otu_table))
+# otu_table <- otu_table[-id,]
+
+
+
+############################################################subSet OTU for analysis nature sample feature otu distribution ########################
+sub_table <- otu_table[,colnames(otu_table) %in% rownames(sub_design)]
+# sub_table <- otu_table[,colnames(otu_table) %in%  rownames(sub_design)]
+
+
+
+
+############rarefraction#####################
+## a consistent random seed [set.seed(21336)] was used for reproducibility
+
+set.seed(21336)
+# rrarefy The sample can be a vector giving the sample sizes for each row.so you need the transpose
+##rarefy(x, sample, se = FALSE, MARGIN = 1) rrarefy(x, sample)
+sub_table<- as.data.frame(t(rrarefy(t(sub_table),sample = min(colSums(sub_table)))))
+### to check the size whether to be same
+# colSums(sub_table)
+
+
+#################reorder######################
+ids <- match(rownames(sub_design),colnames(sub_table))
+sub_table_1 <- sub_table[,ids]
+ids <- match(rownames(sub_design),colnames(otu_table))
+otu_table_1 <- otu_table[,ids]
+
+######################################Order by ZH11.Bac.BI055.01 for  Scal-BI-12-4 E05/5
+sub_OTU<- sub_table_1[order(sub_table_1[,1],decreasing = T),]
+OTU<-otu_table_1[order(otu_table_1[,1],decreasing = T),]
+
+ids <- match(row.names(OTU),row.names(otu_table))
+otu_table<- otu_table[ids,]
+
+pso <- OTU[(rownames(OTU)) %in% "OTU_9",]
+# 
+# 
+top_10_OTU_withSpike <- sub_OTU[1:11,]
+
+OTU_top_11 <- OTU[1:11,]
+OTU_top_11_Tax <- cbind(otu_table[1:11,]$taxonomy,OTU_top_11)
+colnames(OTU_top_11_Tax)[1] <- "Taxa"
+
+OTU_top_11 <- rbind(OTU_top_11,pso)
+# row.names(top_10_OTU_withSpike) <- OTU_top_11
+
+
+######E05######
+sub_design_1 <- sub_design[!sub_design$PlasmidID %in% "Scal-BI-mixture",]
+
+
+pos <-  colnames(OTU_top_11)%in% rownames(sub_design_1)
+E5_mo <- OTU[,pos]
+# rownames(E5_mo) <- OTU_top_11_Tax$Taxa
+
+gra_group <- unique(design$PlasmidID)               # plasmid id 
+# gra_group <- unique(design$Description)
+mix_ratio_group <- unique(design$Other)
+cl_group <- unique(design$Description)                 # Concentration
+
+
+
+#-----------------------------------------------------------------------------------------------------------------------------------------------
+# spike 
+rownames(E5_mo)[1] <- "BI-OS-12-4"
+idx <- match(spike[2],row.names(E5_mo))
+# sub_table_1 <- sub_table[,sub_table[idx,]>160]
+E5_mo$id <- rownames(E5_mo)
+
+
+# mapping spike 12-4
+# idx1 <- match(spike[1],row.names(E5_mo))
+sub_table_2 <- E5_mo
+# sub_table_2 <- E5_mo[-idx1,]
+
+# idx1 <- match(spike[3],row.names(sub_table_2))
+sub_table_2 <- sub_table_2
+
+
+
+len <- length(sub_table_2[1,])
+idx <- match(spike[2],row.names(sub_table_2))
+col_sums <- colSums(sub_table_2[-idx,-len])
+
+
+sub_table_nor_t <- t(sub_table_2[-idx,-len])/col_sums
+sub_table_nor <- t(sub_table_nor_t)
+
+spikeAbun <- sub_table_2[idx,-len]/colSums(sub_table_2[,-len])
+row.names(spikeAbun) <- "spike-in_Abundance"
+
+delta <- col_sums/sub_table_2[idx,-len]
+row.names(delta) <- "delta_value"
+
+total_table<- t(rbind(sub_table_nor,spikeAbun,delta))
+t_table <- as.data.frame(total_table)
+t_table$id <- row.names(total_table)
+
+idx2 <- match("spike-in_Abundance",colnames(t_table))
+index <- cbind(total_table[, idx2], design[match(t_table[,length(t_table[1,])], design$SampleID), ])
+colnames(index)[1] <- "value"
+
+
+
+
+colors <- data.frame(group=cl_group,
+                     color=c(c_red, c_dark_brown,c_black,c_orange,c_blue,c_sea_green,c_yellow))
+
+shapes <- data.frame(group=mix_ratio_group,
+                     shape=c(19, 0, 24))
+
+index$Other <- factor(index$Other, levels=shapes$group)
+index$Description <- factor(index$Description, levels=colors$group)
+index$Mix_Ratio <- index$Other
+# reorder boxplots
+
+
+#### alpha diversity comparison 
+
+shannon <- as.data.frame(diversity(sub_table_2[-1,-ncol(sub_table_2)],index = "shannon",MARGIN = 2))
+colnames(shannon)[1] <- "shannon_value"
+
+index <- cbind(sub_design_1,shannon)
+
+
+##rep usage each and times
+index$Other <- rep(c("One_fold_plant","Two_fold_plant","Bac_spike_perturbation"),each=3,4)
+df <- melt(index)
+
+p <- ggplot(df[df$Other %in% "One_fold_plant",], aes(x=Description, y=value)) +
+  geom_boxplot(alpha=1, outlier.size=0, size=0.7, width=0.5, fill=rep(c(c_black, c_black,c_black,c_black),1)) +
+  geom_jitter(aes(shape=Description,color=Description), position=position_jitter(0.17), size=1, alpha=0.7) +
+  labs(x="Spike-in amounts (copies/reaction)", y="Bactreial shannon index") +
+  geom_signif(comparisons =list(c("E05/5", "E00")),
+              annotations = "NS",
+              y_position = 4.8,tip_length = 0, vjust=0.4,
+              map_signif_level = T)+
+  geom_signif(comparisons =list(c("E04", "E00")),
+              annotations = "NS",
+              y_position = 4.73,tip_length = 0.01, vjust=0.4,
+              map_signif_level = T)+
+  geom_signif(comparisons =list(c("E03", "E00")),
+              annotations = "NS",
+              y_position = 4.65,tip_length = 0.01, vjust=0.4,
+              map_signif_level = T)+
+  facet_wrap(~Other)+
+  scale_colour_manual(values=as.character(colors$color)) +
+  scale_shape_manual(values=shapes$shape) +
+  main_theme
+
+
+p
+
+
+# Add global the p-value
+
+```
+
+
+
+
+
+## FigureS6b Fungi shannon index and statistics (Unoise version)
+
+```{r}
+
 rm(list=ls())
 
 ########### setting the working directory and print it ###################
@@ -231,15 +458,15 @@ p <- ggplot(df[!df$Description %in% "E04"&df$Other %in% "One_fold_plant",], aes(
   geom_jitter(aes(shape=Description,color=Description), position=position_jitter(0.17), size=1, alpha=0.7) +
   labs(x="Spike-in amounts (copies/reaction)", y="Fungal shannon index") +
   # geom_signif(comparisons =list(c("E05/5", "E00")),
-  #             annotations = "No Sig.",
+  #             annotations = "NS",
   #             y_position = 4.8,tip_length = 0, vjust=0.4,
   #             map_signif_level = T)+
   # # geom_signif(comparisons =list(c("E04", "E00")),
-  # #             annotations = "No Sig.",
+  # #             annotations = "NS",
   # #             y_position = 4.73,tip_length = 0.01, vjust=0.4,
   # #             map_signif_level = T)+
   # geom_signif(comparisons =list(c("E03", "E00")),
-  #             annotations = "No Sig.",
+  #             annotations = "NS",
   #             y_position = 4.65,tip_length = 0.01, vjust=0.4,
 #             map_signif_level = T)+
 # facet_wrap(~Other)+
