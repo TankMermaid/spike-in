@@ -1,0 +1,734 @@
+---
+title: "droughtWetRiceBetaDiv&PerM"
+author: "Tank"
+date: "2019/4/9"
+output: html_document
+---
+
+```{r setup, include=FALSE,warning=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## droughtWetRiceBetaDiv&PerM Output the different versions of Usearch & Unoise approach
+```{r}
+rm(list=ls())
+options(warn=3)
+
+
+#########The taxa are ordered by the significance of the correlation between their QMP abundance 
+
+########### setting the working directory and print it ###################
+
+setwd("~/xiaoxuan/180528/180627_AQ/bac/script/")
+print(paste("Your working directory is in",getwd()))
+
+
+
+########### to import the plotting theme() function ########################
+source("plot_function.R")
+# install.packages("ggpubr")
+library(ggpubr)
+library(vegan)
+library(ggplot2)
+# library(reshape)
+# library(multcomp)
+library(ggsignif)
+# library("Biobase", quietly=T, warn.conflicts=F)
+# library("ggplot2", quietly=T, warn.conflicts=F)
+# library("gplots", quietly=T, warn.conflicts=F)
+# library("grid", quietly=T, warn.conflicts=F)
+library("RColorBrewer", quietly=T, warn.conflicts=F)
+library("reshape2", quietly=T, warn.conflicts=F)
+library(dplyr)
+library(tidyverse)
+# library("VennDiagram", quietly=T, warn.conflicts=F)
+
+
+########flag==TRUE,usearch ; FALSE, unoise; project_name:.project; .version: as output version
+
+# .flag <- TRUE
+.flag <- FALSE
+## to set the date as the version
+.date <- Sys.Date()
+
+if(.flag==TRUE)
+{.meth <- "Usearch" 
+}else
+{.meth <- "Unoise"}
+
+.project <-"DroughtWetRice"
+.version <- paste0(.date,.project,.meth)
+
+
+
+### output directory assigned to include the pics & tables########################
+figures.dir <- paste0("~/xiaoxuan/180528/180627_AQ/bac/",.meth,'/',"plot/",sep = '')
+table.dir   <- paste0("~/xiaoxuan/180528/180627_AQ/bac/",.meth,'/',"table/",sep = '')
+
+
+### to make dir recursively 
+fig_flag <- dir.exists(figures.dir)
+if( isTRUE(!fig_flag)){
+  dir.create(figures.dir,recursive = T)
+}
+
+tab_flag <- dir.exists(table.dir)
+if( isTRUE(!tab_flag)){
+  dir.create(table.dir,recursive = T)
+}
+####################################
+
+
+
+#####spike-in design in this batch #####################
+spike <- c("BI-OS-11-3","BI-OS-12-4","BI-OS-10-2")
+
+select_pos <- 2
+spikeName <- "BI-OS-12-4"
+
+
+#1 design Mapping file and Sample id
+design = read.table("../doc/design.txt", header=T, row.names= 1, sep="\t") 
+design$SampleID <- row.names(design)
+sample_list <- as.matrix(row.names(design))
+
+
+if(.flag==TRUE)
+{
+  otu_table = read.table("../result/otutab_header_not_comment.txt", sep = '\t',row.names= 1,header = T)
+  tax = read.table("../result/rep_seq_tax_bac.txt", sep = '\t',row.names= 1,header = T)
+}else
+{
+  otu_table = read.table(paste(dirname(getwd()),'/',.meth,'/',"result/otutab_header_not_comment_match.txt",sep = ''), sep = '\t',row.names= 1,header = T)
+  tax = read.table(paste(dirname(getwd()),'/',.meth,'/','/',"result/taxonomy_8_match.txt",sep = ''), sep = '\t',row.names= 1,header = T)
+}
+
+
+
+############################################################subSet OTU for analysis nature sample feature otu distribution ########################
+sub_table <- otu_table[,colnames(otu_table) %in% rownames(design)]
+# sub_table <- otu_table[,colnames(otu_table) %in%  rownames(design)]
+
+
+
+
+############rarefraction#####################
+## a consistent random seed [set.seed(21336)] was used for reproducibility
+set.seed(21336)
+# rrarefy The sample can be a vector giving the sample sizes for each row.so you need the transpose
+##rarefy(x, sample, se = FALSE, MARGIN = 1) rrarefy(x, sample)
+sub_table<- as.data.frame(t(rrarefy(t(sub_table),sample = min(colSums(sub_table)))))
+write.table(sub_table,file = paste0(table.dir,.version,"FilteredRarefy.txt"),sep = '\t',row.names = T,quote = F)
+
+### to check the size whether to be same
+colSums(sub_table)
+
+
+#################reorder######################
+ids <- match(rownames(design),colnames(sub_table))
+sub_table_1 <- sub_table[,ids]
+ids <- match(rownames(design),colnames(otu_table))
+otu_table_1 <- otu_table[,ids]
+
+######################################Order by ZH11.Bac.BI055.01 for  Scal-BI-12-4 E05/5
+sub_OTU<- sub_table_1[order(sub_table_1[,1],decreasing = T),]
+OTU<-otu_table_1[order(otu_table_1[,1],decreasing = T),]
+
+
+otu_tax <- merge(sub_OTU,tax, by="row.names")
+
+write.table(otu_tax,file = paste0(table.dir,.version,"FilteredOTURarefyTax.txt"),sep = '\t',row.names = F,quote = F)     # 无意修改了一下 无视就可以了
+write.table(sub_OTU,file = paste0(table.dir,.version,"FilteredOTURarefyOrdered.txt"),sep = '\t',row.names = T,quote = F)
+
+
+
+batch_group <- unique(design$Spikein)               # plasmid id 
+# gra_group <- unique(design$Description)
+condition_group <- unique(design$Other)
+geno_group <- unique(design$Genotype)                 # Concentration
+
+
+### OTU_1 spike 
+#-----------------------------------------------------------------------------------------------------------------------------------------------
+# spike 
+# # id <- grep("OTU_1$",rownames(sub_OTU))
+# sub_OTU <- sub_OTU[-id,]
+# pos <- grep("OTU_2$",rownames(sub_OTU))
+spikeInIdNum <- read_lines("../spike/spikeInIdNum_unoise3.txt")
+pos <- grep(paste0(spikeInIdNum,"$"),rownames(sub_OTU))
+
+rownames(sub_OTU)[pos] <- spikeName
+idx <- match(spike[select_pos],row.names(sub_OTU))
+# sub_table_1 <- sub_table[,sub_table[idx,]>160]
+sub_OTU$id <- rownames(sub_OTU)
+
+
+# mapping spike 12-4
+# idx1 <- match(spike[1],row.names(sub_OTU))
+sub_table_2 <- sub_OTU
+# sub_table_2 <- sub_OTU[-idx1,]
+
+# idx1 <- match(spike[3],row.names(sub_table_2))
+sub_table_2 <- sub_table_2
+
+
+
+len <- length(sub_table_2[1,])
+idx <- match(spike[select_pos],row.names(sub_table_2))
+col_sums <- colSums(sub_table_2[-idx,-len])
+
+
+sub_table_nor_t <- t(sub_table_2[-idx,-len])/col_sums
+sub_table_nor <- t(sub_table_nor_t)*10000
+
+
+write.table(sub_table_nor,file =  paste0(table.dir,"RA/otutab_norm_RA.txt"),sep = '\t',row.names = T,quote = F)
+
+
+spikeAbun <- sub_table_2[idx,-len]/colSums(sub_table_2[,-len])
+row.names(spikeAbun) <- "spike-in_Abundance"
+
+delta <- col_sums/sub_table_2[idx,-len]
+row.names(delta) <- "delta_value"
+
+total_table<- t(rbind(sub_table_nor,spikeAbun,delta))
+
+t_table <- as.data.frame(total_table)
+t_table$id <- row.names(total_table)
+
+idx2 <- match("spike-in_Abundance",colnames(t_table))
+index <- cbind(total_table[, idx2], design[match(t_table[,length(t_table[1,])], design$SampleID), ])
+colnames(index)[1] <- "value"
+
+
+
+
+colors <- data.frame(group=geno_group,
+                     color=c(c_red, c_dark_brown,c_black,c_green))
+
+shapes <- data.frame(group=condition_group,
+                     shape=c(19, 0))
+
+index$Other <- factor(index$Other, levels=shapes$group)
+# index$Description <- factor(index$Description, levels=colors$group)
+# index$Description <- NULL
+# index$Mix_Ratio <- index$Other
+# reorder boxplots
+
+# l <- c("soil", "rhizosphere", "root", "pooled_nodules")
+# index$compartment <- factor(index$compartment, levels=l)
+# colors <- colors[match(l, colors$group), ]
+
+
+detailName <- paste0(.project,"BacteriaCommunity",spike[select_pos])
+
+p <- ggplot(index, aes(x=Genotype, y=value, color=Genotype)) +
+  # facet_wrap(~Spikein)+
+  geom_boxplot(alpha=1, outlier.size=0, size=0.7, width=0.4, fill="transparent") +
+  geom_jitter(aes(shape=Other), position=position_jitter(0.17), size=1, alpha=0.7) +
+  scale_colour_manual(values=as.character(colors$color)) +
+  scale_shape_manual(values=shapes$shape) +
+  labs(x=detailName, y="Spike-in Abundance ") +
+  theme(axis.text.x = element_text(size=7.5,angle = 90))+
+  main_theme
+
+
+p
+
+# ggsave(paste(figures.dir, detailName,"spike_in_Abundance.pdf", sep="_"), p)
+# ggsave("../bac_New/figure/silva_spike_in_Abundance.pdf", p)
+
+## to save in the new directory
+ggsave(file=paste0(figures.dir,.version,"FilteredSpikeInAbundance.pdf"),  p)
+
+write.table(index,file = paste0(table.dir,.version,"FilteredFacetNaturalSpikeAbun.txt"),sep = '\t',row.names = T,quote = F)
+
+
+
+# plot absolute abundance 
+qpcr <- read.delim("../doc/DroughtWetRiceQpcr.txt", row.names= 1,header=T, sep="\t",stringsAsFactors = F)
+
+# mapping spike 12-4
+# idx1 <- match(spike[1],row.names(sub_OTU))
+sub_table_2 <- sub_OTU
+
+# idx1 <- match(spike[3],row.names(sub_table_2))
+# sub_table_2 <- sub_table_2
+
+len <- length(sub_table_2[1,])
+idx <- match(spike[2],row.names(sub_table_2))
+
+# col_sums <- colSums(sub_table_2[-idx,-len])
+
+# idx <- match(spike[3],row.names(sub_table))
+# len <- length(sub_table[1,])
+internal_ref <- as.numeric(sub_table_2[idx,-len])
+internal_ref=1+internal_ref
+absoluteAbund <-as.data.frame(t(sub_table_2[-idx,-len])/internal_ref)
+
+
+####absAbundance relative to spike-in
+# absAbundance <- sweep(sub_table_2,2,as.numeric(sub_table_f[idx,]),'/')
+
+####### reorder ##########
+
+ord <- match(rownames(design),rownames(absoluteAbund))   ## column rearrange
+# # ord1 <- match(rownames(bac_li), rownames(sub_table))    ## row reorder
+absoluteAbund<-absoluteAbund[ord,]   ## parrellel
+bac_reads_AA <- as.data.frame(t(absoluteAbund))
+
+write.table(bac_reads_AA,file = paste0(table.dir,"AA/",.version,"SpikeCenNormAbsAbundance.txt"),sep = '\t',row.names = T)
+
+
+# bac_reads_AA <- t(absoluteAbund)
+
+micro_load <- as.data.frame(t(colSums(bac_reads_AA)))
+
+
+
+# micro_load <- micro_load[,colnames(micro_load) %in% row.names(qpcr)]
+idp <- match(colnames(micro_load),row.names(qpcr))
+qpcr_ratio<- qpcr[idp,]
+micro_load <- as.data.frame(t(sweep(micro_load, 2, qpcr_ratio$Copynumber, "/")))
+data_all = merge(micro_load, design, by = "row.names")
+colnames(data_all)[2] <- "Microbiome_Load"
+data_all <- data_all %>% drop_na()
+data_all$Microbiome_Load <- data_all$Microbiome_Load * 1000000+0.0001
+# write.table(data_all,file = paste0(table.dir,"AA/spikeCenNormAbsAbundance.txt")"../AA/modify_adjusted_bac_microbiome_load.txt",sep = '\t',row.names = T,quote = F)
+
+
+# remove_sample_id <- c("TAD1","TAD5","TAD8")
+
+# p = ggplot(data_all[!data_all$Row.names %in% remove_sample_id,], aes(x=Genotype, y = Microbiome_Load,color=Genotype, fill=Genotype)) +
+p = ggplot(data_all, aes(x=Genotype, y = Microbiome_Load,color=Genotype, fill=Genotype)) +
+  geom_boxplot(alpha=1, outlier.size=0, size=0.7, width=0.4, fill="transparent") +
+  geom_jitter(aes(shape=Genotype), position=position_jitter(0.17), size=1, alpha=0.7) +
+  scale_colour_manual(values=as.character(colors$color)) +
+  # scale_shape_manual(values=shapes$shape) +
+  # scale_y_continuous(labels = scales::percent) + 
+  # 分面，进一步按group分组，x轴范围自由否则位置异常，swith设置标签底部，并调置去除图例背景
+  facet_grid( ~Other , scales = "free_x", switch = "x") +  
+  # theme(strip.Funkground = element_blank())+
+  # 关闭x轴刻度和标签
+  # theme(axis.ticks.x = element_blank(), axis.text.x = element_blank())+
+  xlab("Drought Vs Wet")+ylab("Microbiome_Bacteria Load (Total Reads / Spike-in)")+
+  theme(axis.text.x = element_text(size=7.5,angle = 90))+
+  # stat_compare_means(method="kruskal.test", size=3)+
+  # geom_signif(comparisons =list(c("dry", "wet")),
+  #             # annotations = "No Sig.",
+  #             test = "wilcox.test",
+  #             y_position = 7.6,tip_length = 0, vjust=0.4,
+  #             map_signif_level = T)+
+  main_theme
+p
+
+# ggsave(file=paste0(figures.dir,"microbiome_load_DiseaseVsHealthy_removedTAD158.pdf"),  p)
+ggsave(file=paste0(figures.dir,.version,"MicrobiomeLoadDroughtVsWet.pdf"),  p)
+# ggsave("../plot/microbiome_load_DiseaseVsHealthy_removedTAD158.pdf", p)
+
+
+
+
+###AA taxa plot
+qpcr <- read.delim("../doc/DroughtWetRiceQpcr.txt", row.names= 1,header=T, sep="\t",stringsAsFactors = F)
+idp <- match(colnames(bac_reads_AA),row.names(qpcr))
+
+qpcr_ratio<- qpcr[idp,]
+
+
+idp1 <- match(colnames(bac_reads_AA),row.names(qpcr_ratio))
+idp1
+
+colnames(bac_reads_AA)
+rownames(qpcr_ratio)
+bac_reads_AA_cor <- sweep(bac_reads_AA, 2, as.vector(qpcr_ratio$Copynumber), "/")
+bac_reads_AA_cor <- bac_reads_AA_cor * 1000000+0.0001
+
+total_load<- colSums(bac_reads_AA_cor)
+# write.table(bac_reads_AA_cor,file = "~/xiaoxuan/180724/TARDB28/table/adjusted_absAbundance.txt",sep = '\t',row.names = T,quote = F)
+# write.table(bac_reads_AA_cor,file = "~/xiaoxuan/180528/180627_AQ/bac/table/adjusted_absAbundance_1.txt",sep = '\t',row.names = T,quote = F)
+write.table(bac_reads_AA_cor,file = paste0(table.dir,"AA/otutab_norm_AA.txt"),sep = '\t',row.names = T,quote = F)
+write.table(total_load,file =paste0(table.dir,"AA/TotalLoad.txt"),sep = '\t',row.names = T,quote = F)
+
+
+#####RA Drought Wet betaDiversity  
+
+# .sub_flg_for_site <- FALSE
+.sub_flg_for_site <- TRUE
+if(.sub_flg_for_site==TRUE){
+  .sub_site_name <- "AnHui"
+  # id <- match(row.names(design[design$site %in% "Hn"&!design$SampleID %in%c("TAD1","TAD5","TAD8","TAH2","TAH7","TAH9"),]),rownames(bray_curtis))
+}else
+{
+  .sub_site_name <- "HaiNan"
+}
+
+
+bray_curtis <- read.table(paste0(dirname(getwd()),'/',.meth,"/result/beta/bray_curtis.txt"), sep="\t", header=T, row.names = 1,check.names=F,stringsAsFactors = F)
+# bray_curtis_1 <- read.table("../bac_New/table/beta_div/bray_curtis_otu_table_css.txt", sep="\t", header=T, row.names = 1,check.names=F,stringsAsFactors = F)
+# eulian <- read.table("../bac_New/table/beta_div/euclidean_otu_table_css.txt", sep="\t", header=T, row.names = 1,check.names=F,stringsAsFactors = F)
+# 
+design = design[rownames(design) %in% rownames(bray_curtis),]
+design$SampleID <- rownames(design)
+# id <- match(row.names(design[design$site %in% "Ah"&!design$Genotype %in% "MH63ZH",]),rownames(bray_curtis))
+# design = design[rownames(design) %in% rownames(bray_curtis),]
+# id <- match(row.names(design[design$Spikein %in% "spike",]),rownames(bray_curtis))
+
+# id <- match(row.names(design[design$Spikein %in% "spike"&!design$SampleID %in%c("TAD1","TAD5","TAD8"),]),rownames(bray_curtis))
+
+#### to remove outlier samples
+if(.sub_flg_for_site==TRUE){
+  id <- match(row.names(design[design$site %in% "Ah",]),rownames(bray_curtis))
+  # id <- match(row.names(design[design$site %in% "Hn"&!design$SampleID %in%c("TAD1","TAD5","TAD8","TAH2","TAH7","TAH9"),]),rownames(bray_curtis))
+}else
+{
+  # id <- match(row.names(design[design$site %in% "Ah"&!design$SampleID %in%c("TAD1","TAD5","TAD8","TAH2","TAH7","TAH9"),]),rownames(bray_curtis))
+  id <- match(row.names(design[design$site %in% "Hn",]),rownames(bray_curtis))
+}
+
+# ah_bray_curtis <- bray_curtis
+ah_bray_curtis <- bray_curtis[id,id]
+
+
+##  blank \t  need sed to filter  
+
+#### Unconstrained ordination
+# pcoa<-capscale(dis~1
+k <- 3
+pcoa <- cmdscale(ah_bray_curtis, k=k, eig=T)
+# pcoa <- cmdscale(eulian, k=k, eig=T)
+points <- pcoa$points
+eig <- pcoa$eig
+points <- as.data.frame(points)
+colnames(points) <- c("x", "y","z")
+# points$Concentration <- rep(c("One_fold_plant","Two_fold_plant","Bac_spike_perturbation"),each=3,4)
+
+points <- cbind(points, design[match(rownames(points), design$SampleID), ])
+
+
+
+colors <- data.frame(group=geno_group,
+                     color=c(c_red, c_dark_brown,c_black,c_green))
+
+shapes <- data.frame(group=condition_group,
+                     shape=c(19, 6))
+
+p <- ggplot(points, aes(x=x, y=y, color=Genotype,shape=Genotype)) +
+  geom_point(alpha=.7, size=5) +
+  # geom_text(label=paste(points$Other),colour="black",size=4)+
+  scale_colour_manual(values=as.character(colors$color)) +
+  # scale_shape_manual(values=shapes$shape) +
+  stat_ellipse(aes(fill = Other), geom = "polygon",
+               level = 0.7, alpha = 0.3) +
+  labs(x=paste("PCo 1 (", format(100 * eig[1] / sum(eig), digits=4), "%)", sep=""),
+       y=paste("PCo 2 (", format(100 * eig[2] / sum(eig), digits=4), "%)", sep="")) + 
+  main_theme +
+  theme(legend.position="top")
+p
+
+
+ggsave(file=paste0(figures.dir,.version,.sub_site_name,"RABrayCurtisPCo12.pdf"), p)
+
+# ggsave("~/xiaoxuan/180724/TARDB28/unoise/RA/190318_RA_bray_curtis_pcoa12_rmTAD158tah279.pdf", p)
+
+# p <- ggplot(points, aes(x=x, y=y, color=Genotype,shape=Other)) +
+#   geom_point(alpha=.7, size=5) +
+#   scale_colour_manual(values=as.character(colors$color)) +
+#   scale_shape_manual(values=shapes$shape) +
+#   labs(x=paste("PCoA 1 (", format(100 * eig[1] / sum(eig), digits=4), "%)", sep=""),
+#        y=paste("PCoA 2 (", format(100 * eig[2] / sum(eig), digits=4), "%)", sep="")) + 
+#   facet_wrap(~ site)+
+#   main_theme +
+#   theme(legend.position="top")
+# p
+# 
+# 
+# ggsave("../plot/PCoA12_BC_WD.pdf", p)
+
+
+
+p <- ggplot(points, aes(x=x, y=z, color=Genotype,shape=Genotype)) +
+  geom_point(alpha=.7, size=5) +
+  scale_colour_manual(values=as.character(colors$color)) +
+  # scale_shape_manual(values=shapes$shape) +
+  stat_ellipse(aes(fill = Other), geom = "polygon",
+               level = 0.7, alpha = 0.3) +
+  labs(x=paste("PCo 1 (", format(100 * eig[1] / sum(eig), digits=4), "%)", sep=""),
+       y=paste("PCo 3 (", format(100 * eig[3] / sum(eig), digits=4), "%)", sep="")) + 
+  main_theme +
+  theme(legend.position="top")
+p
+
+ggsave(file=paste0(figures.dir,.version,.sub_site_name,"_RABrayCurtisPCo13.pdf"),  p)
+# ggsave("~/xiaoxuan/180724/TARDB28/unoise/RA/190318_RA_bray_curtis_pcoa13_rmTAD158tah279.pdf", p)
+
+p <- ggplot(points, aes(x=y, y=z, color=Genotype,shape=Genotype)) +
+  geom_point(alpha=.7, size=5) +
+  scale_colour_manual(values=as.character(colors$color)) +
+  # scale_shape_manual(Genotypevalues=shapes$shape) +
+  stat_ellipse(aes(fill = Other), geom = "polygon",
+               level = 0.7, alpha = 0.3) +
+  labs(x=paste("PCo 2 (", format(100 * eig[2] / sum(eig), digits=4), "%)", sep=""),
+       y=paste("PCo 3 (", format(100 * eig[3] / sum(eig), digits=4), "%)", sep="")) + 
+  main_theme +
+  theme(legend.position="top")
+p
+
+ggsave(file=paste0(figures.dir,.version,.sub_site_name,"_RABrayCurtisPCo23.pdf"),  p)
+# ggsave("~/xiaoxuan/180724/TARDB28/unoise/RA/1903183_RA_bray_curtis_pcoa23_rmTAD158tah279.pdf", p)
+
+
+
+
+
+#####beta_unifrac_unweighted
+bray_curtis <- read.table(paste0(dirname(getwd()),'/',.meth,"/result/beta/unweighted_unifrac.txt"), sep="\t", header=T, row.names = 1,check.names=F,stringsAsFactors = F)
+# bray_curtis <- read.table("~/xiaoxuan/180724/TARDB28/unoise/result/beta/unweighted_unifrac.txt", sep="\t", header=T, row.names = 1,check.names=F,stringsAsFactors = F)
+# bray_curtis_1 <- read.table("../bac_New/table/beta_div/bray_curtis_otu_table_css.txt", sep="\t", header=T, row.names = 1,check.names=F,stringsAsFactors = F)
+# eulian <- read.table("../bac_New/table/beta_div/euclidean_otu_table_css.txt", sep="\t", header=T, row.names = 1,check.names=F,stringsAsFactors = F)
+# 
+design = design[rownames(design) %in% rownames(bray_curtis),]
+design$SampleID <- rownames(design)
+# id <- match(row.names(design[design$site %in% "Ah"&!design$Genotype %in% "MH63ZH",]),rownames(bray_curtis))
+# design = design[rownames(design) %in% rownames(bray_curtis),]
+# id <- match(row.names(design[design$Spikein %in% "spike",]),rownames(bray_curtis))
+
+#### to remove outlier samples
+if(.sub_flg_for_site==TRUE){
+  id <- match(row.names(design[design$site %in% "Hn",]),rownames(bray_curtis))
+  # id <- match(row.names(design[design$site %in% "Hn"&!design$SampleID %in%c("TAD1","TAD5","TAD8","TAH2","TAH7","TAH9"),]),rownames(bray_curtis))
+}else
+{
+  # id <- match(row.names(design[design$site %in% "Ah"&!design$SampleID %in%c("TAD1","TAD5","TAD8","TAH2","TAH7","TAH9"),]),rownames(bray_curtis))
+  id <- match(row.names(design[design$site %in% "Ah",]),rownames(bray_curtis))
+}
+
+# ah_bray_curtis <- bray_curtis
+ah_bray_curtis <- bray_curtis[id,id]
+
+
+##  blank \t  need sed to filter  
+
+#### Unconstrained ordination
+# pcoa<-capscale(dis~1
+k <- 3
+pcoa <- cmdscale(ah_bray_curtis, k=k, eig=T)
+# pcoa <- cmdscale(eulian, k=k, eig=T)
+points <- pcoa$points
+eig <- pcoa$eig
+points <- as.data.frame(points)
+colnames(points) <- c("x", "y","z")
+# points$Concentration <- rep(c("One_fold_plant","Two_fold_plant","Bac_spike_perturbation"),each=3,4)
+
+points <- cbind(points, design[match(rownames(points), design$SampleID), ])
+
+
+
+colors <- data.frame(group=geno_group,
+                     color=c(c_red, c_dark_brown,c_black,c_green))
+
+shapes <- data.frame(group=condition_group,
+                     shape=c(19, 6))
+
+
+
+p <- ggplot(points, aes(x=x, y=y, color=Genotype,shape=Genotype)) +
+  geom_point(alpha=.7, size=5) +
+  # geom_text(label=paste(points$Other),colour="black",size=4)+
+  scale_colour_manual(values=as.character(colors$color)) +
+  # scale_shape_manual(values=shapes$shape) +
+  # stat_ellipse(aes(fill =Genotype), geom = "polygon",
+  # level = 0.5, alpha = 0.3) +
+  labs(x=paste("PCo 1 (", format(100 * eig[1] / sum(eig), digits=4), "%)", sep=""),
+       y=paste("PCo 2 (", format(100 * eig[2] / sum(eig), digits=4), "%)", sep="")) + 
+  main_theme +
+  theme(legend.position="top")
+p
+
+
+ggsave(file=paste0(figures.dir,.version,.sub_site_name,"_RAUnwUnifracPCo12.pdf"),  p)
+# ggsave("~/xiaoxuan/180724/TARDB28/unoise/RA/190318_RA_bray_curtis_pcoa12_rmTAD158tah279.pdf", p)
+
+
+
+
+p <- ggplot(points, aes(x=x, y=z, color=Genotype,shape=Genotype)) +
+  geom_point(alpha=.7, size=5) +
+  scale_colour_manual(values=as.character(colors$color)) +
+  # scale_shape_manual(values=shapes$shape) +
+  stat_ellipse(aes(fill = Other), geom = "polygon",
+               level = 0.7, alpha = 0.3) +
+  labs(x=paste("PCo 1 (", format(100 * eig[1] / sum(eig), digits=4), "%)", sep=""),
+       y=paste("PCo 3 (", format(100 * eig[3] / sum(eig), digits=4), "%)", sep="")) + 
+  main_theme +
+  theme(legend.position="top")
+p
+
+ggsave(file=paste0(figures.dir,.version,.sub_site_name,"_RAUnwUnifracPCo13.pdf"),  p)
+# ggsave("~/xiaoxuan/180724/TARDB28/unoise/RA/190318_RA_bray_curtis_pcoa13_rmTAD158tah279.pdf", p)
+
+p <- ggplot(points, aes(x=y, y=z, color=Genotype,shape=Genotype)) +
+  geom_point(alpha=.7, size=5) +
+  scale_colour_manual(values=as.character(colors$color)) +
+  # scale_shape_manual(Genotypevalues=shapes$shape) +
+  # stat_ellipse(aes(fill = Other), geom = "polygon",
+  #              level = 0.7, alpha = 0.3) +
+  labs(x=paste("PCo 2 (", format(100 * eig[2] / sum(eig), digits=4), "%)", sep=""),
+       y=paste("PCo 3 (", format(100 * eig[3] / sum(eig), digits=4), "%)", sep="")) + 
+  main_theme +
+  theme(legend.position="top")
+p
+
+ggsave(file=paste0(figures.dir,.version,.sub_site_name,"_RAUnwUnifracPCo23.pdf"),  p)
+# ggsave("~/xiaoxuan/180724/TARDB28/unoise/RA/1903183_RA_bray_curtis_pcoa23_rmTAD158tah279.pdf", p)
+
+
+
+
+#####beta_weighted_unifrac
+
+# bray_curtis <- read.table(paste0("~/xiaoxuan/180724/TARDB28/",.meth,"/result/beta/weighted_unifrac.txt"), sep="\t", header=T, row.names = 1,check.names=F,stringsAsFactors = F)
+bray_curtis <- read.table(paste0(dirname(getwd()),'/',.meth,"/result/beta/weighted_unifrac.txt"), sep="\t", header=T, row.names = 1,check.names=F,stringsAsFactors = F)
+# bray_curtis <- read.table("~/xiaoxuan/180724/TARDB28/unoise/result/beta/unweighted_unifrac.txt", sep="\t", header=T, row.names = 1,check.names=F,stringsAsFactors = F)
+# bray_curtis_1 <- read.table("../bac_New/table/beta_div/bray_curtis_otu_table_css.txt", sep="\t", header=T, row.names = 1,check.names=F,stringsAsFactors = F)
+# eulian <- read.table("../bac_New/table/beta_div/euclidean_otu_table_css.txt", sep="\t", header=T, row.names = 1,check.names=F,stringsAsFactors = F)
+# 
+design = design[rownames(design) %in% rownames(bray_curtis),]
+design$SampleID <- rownames(design)
+# id <- match(row.names(design[design$site %in% "Ah"&!design$Genotype %in% "MH63ZH",]),rownames(bray_curtis))
+# design = design[rownames(design) %in% rownames(bray_curtis),]
+# id <- match(row.names(design[design$Spikein %in% "spike",]),rownames(bray_curtis))
+
+#### to remove outlier samples
+if(.sub_flg_for_site==TRUE){
+  id <- match(row.names(design[design$site %in% "Hn",]),rownames(bray_curtis))
+  # id <- match(row.names(design[design$site %in% "Hn"&!design$SampleID %in%c("TAD1","TAD5","TAD8","TAH2","TAH7","TAH9"),]),rownames(bray_curtis))
+}else
+{
+  # id <- match(row.names(design[design$site %in% "Ah"&!design$SampleID %in%c("TAD1","TAD5","TAD8","TAH2","TAH7","TAH9"),]),rownames(bray_curtis))
+  id <- match(row.names(design[design$site %in% "Ah",]),rownames(bray_curtis))
+}
+
+# ah_bray_curtis <- bray_curtis
+ah_bray_curtis <- bray_curtis[id,id]
+
+
+##  blank \t  need sed to filter  
+
+#### Unconstrained ordination
+# pcoa<-capscale(dis~1
+k <- 3
+pcoa <- cmdscale(ah_bray_curtis, k=k, eig=T)
+# pcoa <- cmdscale(eulian, k=k, eig=T)
+points <- pcoa$points
+eig <- pcoa$eig
+points <- as.data.frame(points)
+colnames(points) <- c("x", "y","z")
+# points$Concentration <- rep(c("One_fold_plant","Two_fold_plant","Bac_spike_perturbation"),each=3,4)
+
+points <- cbind(points, design[match(rownames(points), design$SampleID), ])
+
+
+
+colors <- data.frame(group=geno_group,
+                     color=c(c_red, c_dark_brown,c_black,c_green))
+
+shapes <- data.frame(group=condition_group,
+                     shape=c(19, 6))
+
+
+
+###### echarts to show the dynamic information
+# if (!require(devtools)) {
+#   # install.packages("devtools")
+#   devtools::install_github('cosname/recharts')
+#   library(recharts)
+
+p <- ggplot(points, aes(x=x, y=y, color=Genotype,shape=Genotype)) +
+  geom_point(alpha=.7, size=5) +
+  # geom_text(label=paste(points$Other),colour="black",size=4)+
+  scale_colour_manual(values=as.character(colors$color)) +
+  # scale_shape_manual(values=shapes$shape) +
+  stat_ellipse(aes(fill =Genotype), geom = "polygon",
+  level = 0.5, alpha = 0.3) +
+  labs(x=paste("PCo 1 (", format(100 * eig[1] / sum(eig), digits=4), "%)", sep=""),
+       y=paste("PCo 2 (", format(100 * eig[2] / sum(eig), digits=4), "%)", sep="")) + 
+  main_theme +
+  theme(legend.position="top")
+p
+
+
+ggsave(file=paste0(figures.dir,.version,.sub_site_name,"_RAWUnifracPCo12.pdf"),  p)
+
+
+
+
+
+p <- ggplot(points, aes(x=x, y=z, color=Genotype,shape=Genotype)) +
+  geom_point(alpha=.7, size=5) +
+  scale_colour_manual(values=as.character(colors$color)) +
+  # scale_shape_manual(values=shapes$shape) +
+  stat_ellipse(aes(fill = Other), geom = "polygon",
+               level = 0.7, alpha = 0.3) +
+  labs(x=paste("PCo 1 (", format(100 * eig[1] / sum(eig), digits=4), "%)", sep=""),
+       y=paste("PCo 3 (", format(100 * eig[3] / sum(eig), digits=4), "%)", sep="")) + 
+  main_theme +
+  theme(legend.position="top")
+p
+
+ggsave(file=paste0(figures.dir,.version,.sub_site_name,"_RAWUnifracPCo13.pdf"),  p)
+# ggsave("~/xiaoxuan/180724/TARDB28/unoise/RA/190318_RA_bray_curtis_pcoa13_rmTAD158tah279.pdf", p)
+
+p <- ggplot(points, aes(x=y, y=z, color=Genotype,shape=Genotype)) +
+  geom_point(alpha=.7, size=5) +
+  scale_colour_manual(values=as.character(colors$color)) +
+  # scale_shape_manual(Genotypevalues=shapes$shape) +
+  stat_ellipse(aes(fill = Other), geom = "polygon",
+               level = 0.7, alpha = 0.3) +
+  labs(x=paste("PCo 2 (", format(100 * eig[2] / sum(eig), digits=4), "%)", sep=""),
+       y=paste("PCo 3 (", format(100 * eig[3] / sum(eig), digits=4), "%)", sep="")) + 
+  main_theme +
+  theme(legend.position="top")
+p
+
+ggsave(file=paste0(figures.dir,.version,.sub_site_name,"_RAWUnifracPCo23.pdf"),  p)
+
+
+#### Run PERMANOVA of bac  healthy condition 
+
+## Health
+
+dist <- bray_curtis <- read.table(paste0(dirname(getwd()),'/',.meth,"/result/beta/bray_curtis.txt"), sep="\t", header=T, row.names = 1,check.names=F,stringsAsFactors = F)
+# dist<- bray_curtis <- read.table(paste0("~/xiaoxuan/180724/TARDB28/",.meth,"/result/beta/bray_curtis.txt"), sep="\t", header=T, row.names = 1,check.names=F,stringsAsFactors = F)
+design = design[rownames(design) %in% rownames(bray_curtis),]
+
+
+if(.sub_flg_for_site==TRUE){
+  id <- match(row.names(design[design$site %in% "Ah",]),rownames(bray_curtis))
+}else
+{
+  id <- match(row.names(design[design$site %in% "Hn",]),rownames(bray_curtis))
+}
+# ah_bray_curtis <- bray_curtis
+dist <- bray_curtis[id,id]
+
+design = design[rownames(design) %in% rownames(dist),]
+map =design
+
+
+pmanova <- adonis(as.dist(dist) ~  Genotype + Other + Genotype:Other ,  data = map)
+
+map.nbs <- filter(map, Genotype != "Bulksoil")
+dist.nbs <- dist[match(map.nbs$SampleID, rownames(dist)), match(map.nbs$SampleID, colnames(dist))]
+pmanova.nbs <- adonis(as.dist(dist.nbs) ~ Genotype + Other + Genotype:Other ,  data =  map.nbs)
+
+sink(file=paste0(table.dir,.version,'PerMANOVAStatistics.txt'))
+print(paste0(.version,.sub_site_name," PerMANOVA Results As Follows with or without Bulksoil respectively:"));
+pmanova;pmanova.nbs
+
+sink()
+
+
+
+```
+
