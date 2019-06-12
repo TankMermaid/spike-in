@@ -1,4 +1,4 @@
-[1] "2019-06-12DroughtWetRiceUnoiseAnHui PerMANOVA Results As Follows with or without Bulksoil respectively:"
+[1] "2019-06-12DroughtWetRiceUnoiseHaiNan PerMANOVA Results As Follows with or without Bulksoil respectively:"
 
 Call:
 adonis(formula = as.dist(dist) ~ Genotype + Other + Genotype:Other,      data = map) 
@@ -9,11 +9,11 @@ Number of permutations: 999
 Terms added sequentially (first to last)
 
                Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)    
-Genotype        2    5.1770 2.58852  32.062 0.48019  0.001 ***
-Other           1    0.9680 0.96803  11.990 0.08979  0.001 ***
-Genotype:Other  2    0.5994 0.29971   3.712 0.05560  0.004 ** 
-Residuals      50    4.0368 0.08074         0.37442           
-Total          55   10.7812                 1.00000           
+Genotype        2    7.2017  3.6008  33.585 0.40739  0.001 ***
+Other           1    2.6258  2.6258  24.491 0.14854  0.001 ***
+Genotype:Other  2    1.6315  0.8158   7.609 0.09229  0.001 ***
+Residuals      58    6.2185  0.1072         0.35177           
+Total          63   17.6775                 1.00000           
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
@@ -26,10 +26,10 @@ Number of permutations: 999
 Terms added sequentially (first to last)
 
                Df SumsOfSqs MeanSqs F.Model      R2 Pr(>F)    
-Genotype        1    0.7269 0.72693  7.9920 0.12417  0.001 ***
-Other           1    1.2324 1.23242 13.5494 0.21052  0.001 ***
-Genotype:Other  1    0.2566 0.25658  2.8209 0.04383  0.005 ** 
-Residuals      40    3.6383 0.09096         0.62148           
-Total          43    5.8542                 1.00000           
+Genotype        1    1.7993 1.79930 15.8755 0.16144  0.001 ***
+Other           1    3.1198 3.11979 27.5265 0.27991  0.001 ***
+Genotype:Other  1    0.7862 0.78623  6.9371 0.07054  0.001 ***
+Residuals      48    5.4402 0.11334         0.48811           
+Total          51   11.1455                 1.00000           
 ---
 Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
