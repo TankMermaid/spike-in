@@ -81,7 +81,7 @@ set.seed(21336)
 # rrarefy The sample can be a vector giving the sample sizes for each row.so you need the transpose
 ##rarefy(x, sample, se = FALSE, MARGIN = 1) 
 sub_table_f<- as.data.frame(t(vegan::rrarefy(t(sub_table_f),sample = min(colSums(sub_table_f)))))
-write.table(sub_table_f,file = "./table/20190724_fungi_absAbundance_remoSam_278_AA_otu_table.xls",sep = '\t',row.names = T)
+# write.table(sub_table_f,file = "./table/20190724_fungi_absAbundance_remoSam_278_AA_otu_table.xls",sep = '\t',row.names = T)
 #-----------------------------------------------------------------------------------------------------------------------------------------------
 # spike BI-12-4
 ##### spike-in design in this batch #####################

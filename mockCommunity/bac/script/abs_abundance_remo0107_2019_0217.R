@@ -29,8 +29,9 @@ sub_design <- subset(design,PlasmidID == "Scal-BI-12-4"& Other %in% c("2:02:02",
 
 
 ## remove outlier sample but 2019 0724 modified back 
-pos1 <- grep("*01$|*07|*08$",rownames(sub_design))
-sub_design_filt <- sub_design[-pos1,]
+# pos1 <- grep("*01$|*07|*08$",rownames(sub_design))
+# sub_design_filt <- sub_design[-pos1,]
+sub_design_filt <- sub_design
 # sub_design_filt <- sub_design
 
 l1 = read.delim("data/usearch_map_L1/observation_table.txt", row.names= 1,  header=T, sep="\t")
@@ -77,6 +78,8 @@ sub_table_f<- as.data.frame(t(rrarefy(t(sub_table_f),sample = min(colSums(sub_ta
 colSums(sub_table_f)
 write.table(sub_table,file = "../bac_New/table/bac_OTU_rarefy.txt",sep = '\t',row.names = T,quote = F)
 
+# sub_table_f<- read.table( "../bac_New/table/20190218_bac_OTU_rarefy.txt",sep = '\t',row.names = 1,header = T)
+# sub_table_f <- sub_table_f[,match(rownames(sub_design_filt),colnames(sub_table_f))]
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------
 # spike BI-12-4
@@ -87,7 +90,7 @@ sub_table_2 <- sub_table_f[-idx,]
 
 
 ####absAbundance relative to spike-in
-absAbundance <- sweep(sub_table_2,2,as.numeric(sub_table_f[idx,]+1),'/')
+absAbundance <- sweep(sub_table_2,2,as.numeric(sub_table_f[idx,]),'/')
 
 ####### reorder ##########
 
@@ -104,7 +107,7 @@ absAbundance <- sweep(absAbundance,2,as.numeric(spike_host_ratio$spike_host_rati
 
 
 
-write.table(absAbundance,file = "./table/2019_0724_absAbundance_remo010708.xls",sep = '\t',row.names = T)
+write.table(absAbundance,file = "./table/20190725_mockBacAAremo010708.xls",sep = '\t',row.names = T)
 
 
 
