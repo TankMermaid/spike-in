@@ -1,5 +1,5 @@
 ---
-title: "Figure 4. HA-QAP reveals a reduction in microbial load in perturbed natural root samples. "
+title: "Figure4"
 author: "Qin Yuan"
 date: "2019/4/1"
 output: html_document
@@ -20,7 +20,6 @@ library(pheatmap)
 library("reshape2", quietly=T, warn.conflicts=F)
 library(ggalluvial)
 ```
-
 
 # Fig 4a
 
@@ -65,18 +64,19 @@ plot(data_e05_fun$E05_fun,data_e05_fun$E00_fun,pch=2,
 abline(lm.fit4)
 ```
 
-
 ## Fig 4c - Fig 4d
 
 ```{r}
-bac <- read.table("data/Fig4c_bac_aa_ra.txt", header=T, sep="\t")
+bac <- read.csv("data/Fig4c-bac-all.csv")
+fun <- read.csv("data/Fig4c-fun-all.csv")
+fun2<- read.csv("data/Fig4c-fun-point.csv")
 
 
 ## E05-BAC-RA
 
-t1 <- dplyr::select(bac, Bac, E055_RA_Natural, E055_RA_Perturb)
+t1 <- dplyr::select(bac, Bac, E05_RA_ONE, E05_RA_TWO)
 
-bac05ra <- gather(t1, key = variable , value = count, `E055_RA_Natural`:`E055_RA_Perturb`)
+bac05ra <- gather(t1, key = variable , value = count, `E05_RA_ONE`:`E05_RA_TWO`)
 
 p1 = ggplot(bac05ra, aes(x=variable, y = count, fill = Bac )) + 
   geom_bar(stat = "identity",position="fill", width=0.7)+ 
@@ -90,9 +90,9 @@ p1
 
 ## E05-BAC-QA
 
-t4 <- dplyr::select(bac, Bac, E055_AA_Natural, E055_AA_Perturb)
+t4 <- dplyr::select(bac, Bac, E05_QA_ONE, E05_QA_TWO)
 
-bac05qa <- gather(t4, key = variable , value = count, `E055_AA_Natural`:`E055_AA_Perturb`)
+bac05qa <- gather(t4, key = variable , value = count, `E05_QA_ONE`:`E05_QA_TWO`)
 
 p4 = ggplot(bac05qa, aes(x=variable, y = count, fill = Bac )) + 
   geom_bar(stat = "identity", width=0.7) + 
@@ -103,22 +103,16 @@ p4 = ggplot(bac05qa, aes(x=variable, y = count, fill = Bac )) +
   theme_classic()
 p4
 
-# ggsave("./result/Fig4c_E055_RA.pdf", p1, width = 3.5, height = 3)
-# ggsave("./result/Fig4c_E055_RA.png", p1, width = 3.5, height = 3)
-# ggsave("./result/Fig4d_E055_AA.pdf", p4, width = 3.5, height = 3)
-# ggsave("./result/Fig4d_E055_AA.png", p4, width = 3.5, height = 3)
 ```
 
 ## Fig 4e - Fig 4f
 
 ```{r}
-fun <- read.table("data/Fig4_fun_aa_ra.txt", header=T, sep="\t")
-
 ## E05-FUN-RA
 
-f1 <- dplyr::select(fun, FUN, E055_RA_Natural, E055_RA_Perturb)
+f1 <- dplyr::select(fun, FUN, E05_RA_ONE, E05_RA_TWO)
 
-fun05ra <- gather(f1, key = variable , value = count, `E055_RA_Natural`:`E055_RA_Perturb`)
+fun05ra <- gather(f1, key = variable , value = count, `E05_RA_ONE`:`E05_RA_TWO`)
 
 fp1 = ggplot(fun05ra, aes(x=variable, y = count, fill = FUN )) + 
   geom_bar(stat = "identity",position="fill", width=0.7)+ 
@@ -131,9 +125,9 @@ fp1
 
 ## E05-FUN-QA
 
-f3 <- dplyr::select(fun, FUN, E055_AA_Natural, E055_AA_Perturb)
+f3 <- dplyr::select(fun, FUN, E05_QA_ONE, E05_QA_TWO)
 
-fun05qa <- gather(f3, key = variable , value = count, `E055_AA_Natural`:`E055_AA_Perturb`)
+fun05qa <- gather(f3, key = variable , value = count, `E05_QA_ONE`:`E05_QA_TWO`)
 
 fp3 = ggplot(fun05qa, aes(x=variable, y = count, fill = FUN )) + 
   geom_bar(stat = "identity", width=0.7) + 
@@ -143,10 +137,4 @@ fp3 = ggplot(fun05qa, aes(x=variable, y = count, fill = FUN )) +
   theme_classic()
 fp3
 
-# ggsave("./result/Fig4e_E055_RA.pdf", fp1, width = 3.5, height = 3)
-# ggsave("./result/Fig4e_E055_RA.png", fp1, width = 3.5, height = 3)
-# ggsave("./result/Fig4f_E055_AA.pdf", fp3, width = 3.5, height = 3)
-# ggsave("./result/Fig4f_E055_AA.png", fp3, width = 3.5, height = 3)
 ```
-
- 

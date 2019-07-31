@@ -1,0 +1,202 @@
+---
+title: "FigureS8"
+author: "Qin Yuan"
+date: "2019/4/4"
+output: html_document
+---
+
+```{r warning=FALSE, message=FALSE}
+rm(list=ls()) 
+source("plot_function.R")
+# install.packages("ggpubr")
+library(ggpubr)
+library(vegan)
+library(ggplot2)
+library(multcomp)
+library(ggsignif)
+library("Biobase", quietly=T, warn.conflicts=F)
+library("ggplot2", quietly=T, warn.conflicts=F)
+library("gplots", quietly=T, warn.conflicts=F)
+library("grid", quietly=T, warn.conflicts=F)
+library("RColorBrewer", quietly=T, warn.conflicts=F)
+library("reshape2", quietly=T, warn.conflicts=F)
+```
+
+```{r}
+#####spike-in design in this batch #####################
+spike <- c("BI-OS-11-3","BI-OS-12-4","BI-OS-10-2")
+
+design = read.table("data/beta_wetdry/design.txt", header=T, row.names= 1, sep="\t") 
+
+batch_group <- unique(design$site)               # plasmid id 
+condition_group <- unique(design$Other)
+geno_group <- unique(design$Genotype)                 # Concentration
+
+
+#####RA AH
+dist<- bray_curtis <- read.table("data/beta_wetdry/bray_curtis_otutab.txt", sep="\t", header=T, row.names = 1,check.names=F,stringsAsFactors = F)
+ design$SampleID <- row.names(design)
+
+design = design[rownames(design) %in% rownames(bray_curtis),]
+id <- match(row.names(design[design$site %in% "Ah"&!design$Genotype %in% "MH63ZH",]),rownames(bray_curtis))
+
+ah_bray_curtis <- bray_curtis[id,id]
+
+```
+
+```{r}
+k <- 3
+pcoa <- cmdscale(ah_bray_curtis, k=k, eig=T)
+
+points <- pcoa$points
+eig <- pcoa$eig
+points <- as.data.frame(points)
+colnames(points) <- c("x", "y","z")
+
+points <- cbind(points, design[match(rownames(points), design$SampleID), ])
+colors <- data.frame(group=geno_group,color=c(c_red, c_dark_brown,c_black,c_orange))
+shapes <- data.frame(group=condition_group,shape=c(19, 0))
+
+
+# plot PCo 1 and 2
+
+p <- ggplot(points, aes(x=x, y=y, color=Genotype,shape=Other)) +
+  geom_point(alpha=.7, size=5) +
+  scale_colour_manual(values=as.character(colors$color)) +
+  scale_shape_manual(values=shapes$shape) +
+  labs(x=paste("PCoA 1 (", format(100 * eig[1] / sum(eig), digits=4), "%)", sep=""),
+       y=paste("PCoA 2 (", format(100 * eig[2] / sum(eig), digits=4), "%)", sep="")) + 
+  main_theme +
+  theme(legend.position="top")
+p
+
+```
+
+```{r}
+#### Hainan
+
+design = design[rownames(design) %in% rownames(bray_curtis),]
+id <- match(row.names(design[design$site %in% "Hn"&!design$Genotype %in% "MH63ZH",]),rownames(bray_curtis))
+
+hn_bray_curtis <- bray_curtis[id,id]
+
+k <- 3
+pcoa <- cmdscale(hn_bray_curtis, k=k, eig=T)
+
+points <- pcoa$points
+eig <- pcoa$eig
+points <- as.data.frame(points)
+colnames(points) <- c("x", "y","z")
+
+points <- cbind(points, design[match(rownames(points), design$SampleID), ])
+colors <- data.frame(group=geno_group, color=c(c_red, c_dark_brown,c_black,c_orange))
+shapes <- data.frame(group=condition_group, shape=c(19, 0))
+```
+
+```{r}
+# plot PCo 1 and 2
+
+p <- ggplot(points, aes(x=x, y=y, color=Genotype,shape=Other)) +
+  geom_point(alpha=.7, size=5) +
+  scale_colour_manual(values=as.character(colors$color)) +
+  scale_shape_manual(values=shapes$shape) +
+  labs(x=paste("PCoA 1 (", format(100 * eig[1] / sum(eig), digits=4), "%)", sep=""),
+       y=paste("PCoA 2 (", format(100 * eig[2] / sum(eig), digits=4), "%)", sep="")) + 
+  main_theme +
+  theme(legend.position="top")
+p
+```
+
+```{r}
+## Fungi
+design = read.table("data/beta_wetdry/design_fungi.txt", header=T, row.names= 1, sep="\t") 
+design$SampleID <- row.names(design)
+
+bray_curtis <- read.table("data/beta_wetdry/bray_curtis_otutab_1.txt", sep="\t", header=T, row.names = 1,check.names=F,stringsAsFactors = F)
+
+```
+
+
+```{r}
+#### AnHui
+design = design[rownames(design) %in% rownames(bray_curtis),]
+id <- match(row.names(design[design$Site %in% "AnHui"&!design$Genotype %in% "MH63ZH",]), rownames(bray_curtis) )
+
+ah_bray_curtis <- bray_curtis[id,id]
+design <- design[rownames(design) %in% rownames(ah_bray_curtis),]
+
+geno_group <- unique(design$Genotype)                 # Concentration
+condition_group <- unique(design$Condition)
+
+
+#### Unconstrained ordination
+# pcoa<-capscale(dis~10
+k <- 3
+pcoa <- cmdscale(ah_bray_curtis, k=k, eig=T)
+# pcoa <- cmdscale(eulian, k=k, eig=T)
+points <- pcoa$points
+eig <- pcoa$eig
+points <- as.data.frame(points)
+colnames(points) <- c("x", "y","z")
+# points$Concentration <- rep(c("One_fold_plant","Two_fold_plant","Fun_spike_perturbation"),each=3,4)
+
+points <- cbind(points, design[match(rownames(points), design$SampleID), ])
+points <- points[-nrow(points),]
+
+colors <- data.frame(group=geno_group, color=c(c_red, c_dark_brown,c_black))
+
+shapes <- data.frame(group=condition_group, shape=c(19, 0))
+
+# plot PCo 1 and 2
+
+p <- ggplot(points, aes(x=x, y=y, color=Genotype,shape=Condition)) +
+  geom_point(alpha=.7, size=5) +
+  scale_colour_manual(values=as.character(colors$color)) +
+  scale_shape_manual(values=shapes$shape) +
+  labs(x=paste("PCoA 1 (", format(100 * eig[1] / sum(eig), digits=4), "%)", sep=""),
+       y=paste("PCoA 2 (", format(100 * eig[2] / sum(eig), digits=4), "%)", sep="")) + 
+  main_theme +
+  theme(legend.position="top")
+p
+```
+
+```{r}
+design = read.table("data/beta_wetdry/design_fungi.txt", header=T, row.names= 1, sep="\t") 
+design$SampleID <- row.names(design)
+design = design[rownames(design) %in% rownames(bray_curtis),]
+id <- match(row.names(design[design$Site %in% "HaiNan"&!design$Genotype %in% "MH63ZH",]), rownames(bray_curtis))
+
+ah_bray_curtis <- bray_curtis[id,id]
+design <- design[rownames(design) %in% rownames(ah_bray_curtis),]
+
+geno_group <- unique(design$Genotype)                 # Concentration
+condition_group <- unique(design$Condition)
+
+#### Unconstrained ordination
+k <- 3
+pcoa <- cmdscale(ah_bray_curtis, k=k, eig=T)
+points <- pcoa$points
+eig <- pcoa$eig
+points <- as.data.frame(points)
+colnames(points) <- c("x", "y","z")
+points <- cbind(points, design[match(rownames(points), design$SampleID), ])
+points <- points[-nrow(points),]
+colors <- data.frame(group=geno_group,color=c(c_red, c_dark_brown,c_black))
+
+shapes <- data.frame(group=condition_group,shape=c(19, 0))
+
+
+# plot PCo 1 and 2
+
+p <- ggplot(points, aes(x=x, y=y, color=Genotype,shape=Condition)) +
+  geom_point(alpha=.7, size=5) +
+  scale_colour_manual(values=as.character(colors$color)) +
+  scale_shape_manual(values=shapes$shape) +
+  labs(x=paste("PCoA 1 (", format(100 * eig[1] / sum(eig), digits=4), "%)", sep=""),
+       y=paste("PCoA 2 (", format(100 * eig[2] / sum(eig), digits=4), "%)", sep="")) + 
+  main_theme +
+  theme(legend.position="top")
+p
+
+```
+

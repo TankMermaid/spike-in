@@ -1,5 +1,5 @@
 ---
-title: "Figure 2. HA-QAP is more accurate than classical profiling based on relative abundance, as revealed by the bacterial mock experiments."
+title: "Figure 2"
 author: "Qin Yuan"
 date: "2019/4/1"
 output: html_document
@@ -47,7 +47,6 @@ lm.fit1 <- lm(spike$counts~ spike$log2)
 coef(lm.fit1)
 
 ```
-
 ## Fig 2b
 
 ```{r}
@@ -65,23 +64,15 @@ p1G <- ggplot(data1G, aes(bacteria, count))+
   theme_bw()+
   theme(axis.text.x = element_text(angle = -45, vjust = 1, hjust = 0)) 
 p1G
-
 # ggsave(paste("result/Fig2b-group1.pdf", sep=""), p1G, width = 8, height = 6)
 
 ```
 
 
+
 ## Fig 2c - Fig 2d
 
 ```{r}
-data1 <- read.table("data/Fig2_bac_mock_spike_g1g2.txt", header = T)
-
-data1G <- gather(data1, key = replicate , value = count, `sample01`:`sample05`)
-
-G1 <- filter(data1G, Group =="1")
-G2 <- filter(data1G, Group =="2")
-# G3 <- filter(data1G, Group =="3")
-
 bac_ra <- read.csv("data/Fig2c-bar-ra.csv", header = T)
 table_bac_ra_r <- gather(bac_ra,  key = sample , value = count, `sample01`:`sample04`)
 table_bac_ra <- table_bac_ra_r
@@ -92,9 +83,11 @@ group1_E0520_bac_ra <- filter(E0520_bac_ra , group == "1:01:01")
 group2_E0520_bac_ra <- filter(E0520_bac_ra , group == "2:02:02")
 
 
-table_bac_aa <- rbind(G1,G2)
-table_bac_aa$bacteria <- factor(table_bac_aa$bacteria)
-table_bac_aa$group <- factor(table_bac_aa$group)
+bac_aa <- read.csv("data/Fig2d-bar-aa.csv", header = T)
+table_bac_aa_r <- gather(bac_aa,  key = sample , value = count, `sample01`:`sample04`)
+table_bac_aa <- table_bac_aa_r
+table_bac_aa$bacteria <- factor(table_bac_aa_r$bacteria)
+table_bac_aa$group <- factor(table_bac_aa_r$group)
 E0520_bac_aa <- filter(table_bac_aa, spike == "E0520")
 group1_E0520_bac_aa <- filter(E0520_bac_aa, group == "1:01:01")
 group2_E0520_bac_aa <- filter(E0520_bac_aa, group == "2:02:02")
@@ -117,6 +110,9 @@ Fig2c <- ggplot(Fig2c_ra_g1g2) +
   theme(axis.text.x = element_text(angle = -45, vjust = 1, hjust = 0))
 Fig2c
 
+#ggsave(paste("result/Fig2c-ra-g1g2-boxplot.pdf", sep=""), Fig2c, width = 7, height = 6)
+
+
 Fig2d <- ggplot(Fig2d_aa_g1g2) +
   geom_boxplot(aes(x = bacteria, y = count, fill = group), width = 0.3, na.rm = TRUE) +
   scale_fill_manual(values=c("#9acd32","#ffa07a"))+
@@ -127,11 +123,7 @@ Fig2d <- ggplot(Fig2d_aa_g1g2) +
   theme_classic() +
   theme(axis.text.x = element_text(angle = -45, vjust = 1, hjust = 0))
 Fig2d
-
-# ggsave(paste("result/Fig2c-ra-g1g2-boxplot.pdf", sep=""), Fig2c, width = 7, height = 5)
-# ggsave(paste("result/Fig2c-ra-g1g2-boxplot.png", sep=""), Fig2c, width = 7, height = 5)
-# ggsave(paste("result/Fig2d-aa-g1g2-boxplot.pdf", sep=""), Fig2d, width = 7, height = 5)
-# ggsave(paste("result/Fig2d-aa-g1g2-boxplot.png", sep=""), Fig2d, width = 7, height = 5)
+#ggsave(paste("result/Fig2d-aa-g1g2-boxplot.pdf", sep=""), Fig2d, width = 7, height = 6)
 
 ```
 
@@ -139,14 +131,6 @@ Fig2d
 ## Fig 2e - Fig 2f
 
 ```{r}
-data1 <- read.table("data/Fig2_bac_mock_spike_g1g3.txt", header = T)
-
-data1G <- gather(data1, key = replicate , value = count, `sample01`:`sample05`)
-
-G1 <- filter(data1G, Group =="1")
-# G2 <- filter(data1G, Group =="2")
-G3 <- filter(data1G, Group =="3")
-
 bac_ra <- read.csv("data/Fig2e-bar-ra.csv", header = T)
 table_bac_ra_r <- gather(bac_ra,  key = sample , value = count, `sample01`:`sample05`)
 table_bac_ra <- table_bac_ra_r
@@ -156,9 +140,11 @@ E0520_bac_ra <- filter(table_bac_ra, spike == "E0520")
 group1_E0520_bac_ra <- filter(E0520_bac_ra , group == "1:01:01")
 group3_E0520_bac_ra <- filter(E0520_bac_ra , group == "2:02:01")
 
-table_bac_aa <- rbind(G1,G3)
-table_bac_aa$bacteria <- factor(table_bac_aa$bacteria)
-table_bac_aa$group <- factor(table_bac_aa$group)
+bac_aa <- read.csv("data/Fig2f-bar-aa.csv", header = T)
+table_bac_aa_r <- gather(bac_aa,  key = sample , value = count, `sample01`:`sample05`)
+table_bac_aa <- table_bac_aa_r
+table_bac_aa$bacteria <- factor(table_bac_aa_r$bacteria)
+table_bac_aa$group <- factor(table_bac_aa_r$group)
 E0520_bac_aa <- filter(table_bac_aa, spike == "E0520")
 group1_E0520_bac_aa <- filter(E0520_bac_aa, group == "1:01:01")
 group3_E0520_bac_aa <- filter(E0520_bac_aa, group == "2:02:01")
@@ -180,6 +166,8 @@ Fig2e <- ggplot(Fig2e_ra_g1g3) +
   theme_classic() +
   theme(axis.text.x = element_text(angle = -45, vjust = 1, hjust = 0))
 Fig2e
+# ggsave(paste("result/Fig2e-ra-g1g3-boxplot.pdf", sep=""), Fig2e, width = 7, height = 6)
+
 
 Fig2f <- ggplot(Fig2f_aa_g1g3) +
   geom_boxplot(aes(x = bacteria, y = count, fill = group), width = 0.3, na.rm = TRUE) +
@@ -191,10 +179,7 @@ Fig2f <- ggplot(Fig2f_aa_g1g3) +
   theme_classic() +
   theme(axis.text.x = element_text(angle = -45, vjust = 1, hjust = 0))
 Fig2f
-# ggsave(paste("result/Fig2e-ra-g1g3-boxplot.pdf", sep=""), Fig2e, width = 7, height = 5)
-# ggsave(paste("result/Fig2e-ra-g1g3-boxplot.png", sep=""), Fig2e, width = 7, height = 5)
-# ggsave(paste("result/Fig2f-aa-g1g3-boxplot.pdf", sep=""), Fig2f, width = 7, height = 5)
-# ggsave(paste("result/Fig2f-aa-g1g3-boxplot.png", sep=""), Fig2f, width = 7, height = 5)
+# ggsave(paste("result/Fig2f-aa-g1g3-boxplot.pdf", sep=""), Fig2f, width = 7, height = 6)
 
 ```
 

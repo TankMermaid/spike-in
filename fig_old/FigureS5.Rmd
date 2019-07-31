@@ -1,0 +1,79 @@
+---
+title: "FigureS5"
+author: "Qin Yuan"
+date: "2019/4/1"
+output: html_document
+---
+
+```{r warning=FALSE, message=FALSE}
+rm(list=ls()) 
+
+library(ggplot2)
+library(ggpubr)
+library(dplyr)
+library(tidyr)
+```
+
+
+
+## Fig S5
+
+
+```{r}
+bac <- read.csv("./data/20180807-fig4-lm-bac.csv", header = T)
+fun <- read.csv("./data/20180807-fig4-lm-fun.csv", header = T)
+
+## Bacteria E04-E00
+
+data_e04_bac <- select(bac, OTUID, E04_bac, E00_bac)
+
+x2 <- data_e04_bac$E04_bac
+y2 <- data_e04_bac$E00_bac
+
+cor.test(x2,y2,method="pearson")
+lm.fit2 <-lm(y2~0+x2)
+coef(lm.fit2)
+
+plot(data_e04_bac$E04_bac,data_e04_bac$E00_bac,
+     xlab ="OTU reads (%) Unamended root DNA", 
+     ylab ="OTU reads (%) spiked root DNA")
+
+abline(lm.fit2)
+
+
+## Bacteria E03-E00
+
+data_e03_bac <- select(bac, OTUID, E03_bac, E00_bac)
+
+x3 <- data_e03_bac$E03_bac
+y3 <- data_e03_bac$E00_bac
+
+cor.test(x3,y3,method="pearson")
+lm.fit3 <-lm(y3~0+x3)
+coef(lm.fit3)
+
+plot(data_e03_bac$E03_bac,data_e03_bac$E00_bac,
+     xlab ="OTU reads (%) Unamended root DNA", 
+     ylab ="OTU reads (%) spiked root DNA")
+
+abline(lm.fit3)
+
+
+## Fungi E03-E00
+
+data_e03_fun <- select(fun, OTUID, E03_fun, E00_fun)
+
+x6 <- data_e03_fun$E03_fun
+y6 <- data_e03_fun$E00_fun
+
+cor.test(x6,y6,method="pearson")
+lm.fit6 <- lm(y6~0+x6)
+coef(lm.fit6)
+
+plot(data_e03_fun$E03_fun,data_e03_fun$E00_fun,pch=2,
+     xlab ="OTU reads (%) Unamended root DNA", 
+     ylab ="OTU reads (%) spiked root DNA")
+
+abline(lm.fit6)
+
+```

@@ -1,9 +1,10 @@
 ---
-title: "Figure 6. HA-QAP revealed microbial load increase in wheat plant with root rot disease."
+title: "Figure6"
 author: "Qin Yuan"
-date: "2019/7/31"
+date: "2019/4/1"
 output: html_document
 ---
+
 
 ```{r warning=FALSE, message=FALSE}
 rm(list=ls()) 
@@ -11,10 +12,12 @@ rm(list=ls())
 library(ggplot2)
 library(ggpubr)
 library(dplyr)
-library(tidyr) 
+library(tidyr)
+library(broom)
 library(plyr)
 library(scales)
-library(pheatmap) 
+library(pheatmap)
+library("reshape2", quietly=T, warn.conflicts=F)
 library(ggalluvial)
 ```
 
@@ -37,7 +40,7 @@ da_adonis = function(sampleV){
   }
 }
 
-design = read.table("data/Fig6_design.txt", header=T, row.names=1, sep="\t")
+design = read.table("../data/design.txt", header=T, row.names=1, sep="\t")
 design$group=design$groupID
 
 if (TRUE){
@@ -55,7 +58,7 @@ sub_design = as.data.frame(t(sub_design_2))
 
 
 ```{r}
-beta = read.table(paste("./data/Fig6_bac_bray_curtis.txt",sep=""), header=T, row.names=1, sep="\t", comment.char="") 
+beta = read.table(paste("../data/beta/bray_curtis.txt",sep=""), header=T, row.names=1, sep="\t", comment.char="") 
 idx = rownames(sub_design) %in% rownames(beta)
 sub_design=sub_design[idx,]
 sub_beta=beta[rownames(sub_design),rownames(sub_design)]
@@ -81,7 +84,7 @@ p
 
 ```{r}
 
-design = read.table("./data/Fig6_design.txt", header=T, row.names=1, sep="\t")
+design = read.table("../data/design.txt", header=T, row.names=1, sep="\t")
 design$group=design$groupID
 
 if (TRUE){
@@ -99,7 +102,7 @@ sub_design = as.data.frame(t(sub_design_2))
 
 
 ```{r}
-beta = read.table(paste("./data/Fig6_fungi_bray_curtis.txt",sep=""), header=T, row.names=1, sep="\t", comment.char="") 
+beta = read.table(paste("../data/beta/fungi_bray_curtis.txt",sep=""), header=T, row.names=1, sep="\t", comment.char="") 
 idx = rownames(sub_design) %in% rownames(beta)
 sub_design=sub_design[idx,]
 sub_beta=beta[rownames(sub_design),rownames(sub_design)]
@@ -120,14 +123,20 @@ p = ggplot(points, aes(x=PC1, y=PC2, color=group, shape= group)) + geom_point(al
 p
 ```
 
+
+
+
 ## Fig 6c
 
 ```{r}
-data = read.table("data/Fig6c_usearch_total_load.txt",header = T, row.names = 1)
+data = read.table("../data/cluster_total_load.txt",header = T, row.names = 1)
 head(data)
 
 sub_data = subset(data, SampleID %in% c("TAD2", "TAD3", "TAD4", "TAD6", "TAD7", "TAD9", "TAD10", "TAH1", "TAH3", "TAH4", "TAH5", "TAH6", "TAH8", "TAH10"))
+```
 
+
+```{r}
 com_w1 <- compare_means( Totalload ~ Treatment, data = sub_data, method = "wilcox.test", paired=FALSE, group.by = "Micro")
 com_t1 <- compare_means( Totalload ~ Treatment, data = sub_data, method = "t.test", paired=FALSE, group.by = "Micro")
 head(com_t1)
@@ -135,109 +144,127 @@ head(com_w1)
 
 com <- rbind(com_w1, com_t1)
 # write.table(com , file = "./ttload_cluster_com.txt",sep = '\t',row.names = T)
+```
 
-p1 = ggbarplot(sub_data, x = "Treatment", y = "Totalload", add = "mean_se", facet.by = "Micro",ylim = c(0, 30))+
-  stat_compare_means(method = "t.test", label =  "p.signif", label.y = 30, label.x = 1.5)  
+
+```{r}
+p1 = ggbarplot(sub_data, x = "Treatment", y = "Totalload", add = "mean_se", facet.by = "Micro",ylim = c(0, 2500))+
+  stat_compare_means(method = "t.test", label =  "p.signif", label.y = 2500, label.x = 1.5)  
 p1
 # ggsave(paste("./ttload_cluster_com.pdf", sep=""), p1, width = 6, height = 8)
 # ggsave(paste("./ttload_cluster_com.png", sep=""), p1, width = 6, height = 8)
 
 ```
 
-
 ## Fig 6d
 
 ```{r}
 # Public file 1. "design.txt"  Design of experiment
-design = read.table("data/Fig6d_design.txt", header=T, row.names= 1, sep="\t") 
+design = read.table("../data/design.txt", header=T, row.names= 1, sep="\t") 
 
 # Public file 2. "otu_table.txt"  raw reads count of each OTU in each sample
-otu_table = read.delim("data/Fig6d_fun_otutab_norm_AA.txt", row.names= 1,  header=T, sep="\t")
+otu_table = read.delim("../data/otu_plant_aa.txt", row.names= 1,  header=T, sep="\t")
 
 # Public file 3. "rep_seqs_tax.txt"  taxonomy for each OTU, tab seperated
-taxonomy = read.delim("data/Fig6d_taxonomy_8.txt", row.names= 1,header=F, sep="\t")
+taxonomy = read.delim("../data/taxonomy_8.txt", row.names= 1,header=F, sep="\t")
 colnames(taxonomy) = c("kingdom","phylum","class","order","family","genus","species")
 
 tax_count = merge(taxonomy, otu_table, by="row.names")
 
+```
+
+```{r}
 ## remove the abnormal points
 sub_tax_count = dplyr::select(tax_count, Row.names, kingdom, phylum, class, order, family, genus, species, TAD2, TAD3, TAD4, TAD6, TAD7, TAD9, TAD10, TAH1, TAH3, TAH4, TAH5, TAH6, TAH8, TAH10)
+
+
 
 g1_Bipolaris = dplyr::filter(sub_tax_count, genus == "Bipolaris")
 g2_Fusarium = dplyr::filter(sub_tax_count, genus == "Fusarium")
 genus = rbind(g1_Bipolaris, g2_Fusarium)
 otuid = as.data.frame(genus$Row.names)
 colnames(otuid) = "Row.names"
+
+
 com_genus = merge(sub_tax_count, otuid, by="Row.names")
 colnames(com_genus)[1] = "OTUID"
+
+
 com_genus_tidy = gather(com_genus, key = SampleID , value = method2aa, `TAD2`:`TAH10`)
 
-design2 = read.table("data/Fig6d_design.txt", header=T, sep="\t") 
+
+design2 = read.table("../data/design.txt", header=T, sep="\t") 
 com_genus_tidy_design = merge(com_genus_tidy, design2, by="SampleID")
 com_aa = dplyr::select(com_genus_tidy_design, SampleID, OTUID, genus, method2aa, Genotype)
 colnames(com_aa)[3] = "Genus"
 colnames(com_aa)[5] = "Treatment"
-# write.table(com_aa, file = "./Fig6d_com_aa.txt",sep = '\t',row.names = T)
+# 
+# write.table(com_aa, file = "./pointD1D5D8H2H7H9/com_aa.txt",sep = '\t',row.names = T)
+```
 
-com_ra <-  read.table("./data/Fig6d_com_ra.txt", header=T, sep="\t") 
+
+
+```{r}
+## 读取com_ra数据
+com_ra <-  read.table("../data/com_ra.txt", header=T, sep="\t") 
 com_method1ra = gather(com_ra, key = Method , value = value, `method1ra`)
 com_method2aa = gather(com_aa, key = Method , value = value, `method2aa`)
 
+## 整合compare总表
 com_aara <- rbind(com_method1ra, com_method2aa)
+```
 
 
+
+```{r}
+## 使用两种方法检测OTU在不同样品中的丰度
 OTU45 <- dplyr::filter(com_aara, OTUID == "OTU_45")
 
-p45 <- ggboxplot(OTU45, x="Treatment",y = "value",scales = "free_y", 
+p45 <- ggboxplot(OTU45, x="Treatment",y = "value",
                facet.by = "Method", color = "Treatment", order = c("Disease","Healthy"),
                palette =  "uchicago", add = "jitter", short.panel.labs = FALSE, title = "OTU_45_Bipolaris")
-
+# 添加p值
 p045 <- p45 + stat_compare_means(label =  "p.signif",  method = "wilcox.test",label.x = 1.55)
 
 p045
 
-# ggsave(paste("./Fig6d_com_aa_OTU_45.pdf", sep=""), p045, width = 6, height = 7)
-# ggsave(paste("./Fig6d_com_aa_OTU_45.png", sep=""), p045, width = 6, height = 7)
+# ggsave(paste("./pointD1D5D8H2H7H9/com_aa_OTU_45.pdf", sep=""), p032, width = 6, height = 7)
+# ggsave(paste("./pointD1D5D8H2H7H9/com_aa_OTU_45.png", sep=""), p032, width = 6, height = 7)
 ```
+
 
 ## Fig 6e
 
-```{r}
-data = read.table("./data/Fig6e.txt",header = T, row.names = 1)
+```{r, warning=FALSE, message=FALSE}
+data = read.table("../data/Fig6g.txt",header = T, row.names = 1)
+head(data)
+
 data_1 <- filter(data, re == "1")
 data_2 <- filter(data, re == "2")
+```
 
+```{r, warning=FALSE, message=FALSE}
 com_1 <- compare_means( ratio ~ treatment, data = data_1, method = "wilcox.test", paired=FALSE)
 com_t1 <- compare_means( ratio ~ treatment, data = data_1, method = "t.test", paired=FALSE)
 com_2 <- compare_means( ratio ~ treatment, data = data_2, method = "wilcox.test", paired=FALSE)
 com_t2 <- compare_means( ratio ~ treatment, data = data_2, method = "t.test", paired=FALSE)
+head(com_1)
+head(com_t1)
+head(com_2)
+head(com_t2)
+
 com <- rbind(com_1, com_t1, com_2, com_t2)
 
+# 
+# write.table(com , file = "./result/Fig6_load_com.txt",sep = '\t',row.names = T)
+```
+
+```{r}
 p1 = ggbarplot(data_1, x = "treatment", y = "ratio", add = "mean_se")+
   stat_compare_means(method = "t.test")  
 p1
 # ggsave(paste("./result/Fig6-load-1.pdf", sep=""), p1, width = 3, height = 6)
 ```
-
-## Fig 6e - Fungi
-
-```{r}
-data = read.table("./data/Fig_6e_fungi.txt",header = T, row.names = 1)
-data_1 <- filter(data, re == "1")
-data_2 <- filter(data, re == "2")
-
-com_1 <- compare_means( ratio ~ treatment, data = data_1, method = "wilcox.test", paired=FALSE)
-com_t1 <- compare_means( ratio ~ treatment, data = data_1, method = "t.test", paired=FALSE)
-com_2 <- compare_means( ratio ~ treatment, data = data_2, method = "wilcox.test", paired=FALSE)
-com_t2 <- compare_means( ratio ~ treatment, data = data_2, method = "t.test", paired=FALSE)
-com <- rbind(com_1, com_t1, com_2, com_t2)
-
-p1 = ggbarplot(data_1, x = "treatment", y = "ratio", add = "mean_se")+
-  stat_compare_means(method = "t.test")  
-p1
-# ggsave(paste("./result/Fig6-load-fungi_r1.pdf", sep=""), p1, width = 3, height = 6)
-```
-
 
 
 ## Fig 6f
@@ -297,14 +324,14 @@ if(.flag==TRUE)
 ```{r,warning=FALSE, message=FALSE}
 ######################## AA network construction removal of sample TAD1,TAD5 TAD8 TAH2 TAH7 TAH9
 
-design = read.table("./data/doc/design.txt", header=T, row.names= 1, sep="\t") 
+design = read.table("../data/doc/design.txt", header=T, row.names= 1, sep="\t") 
 sub_design <- design[design$Spikein %in% "spike"& !design$Other %in% "Bulksoil",]
 id_rm= c("TAD1","TAD5","TAD8","TAH2","TAH7","TAH9")
 sub_design= sub_design[!rownames(sub_design) %in% id_rm,]
 
 
-bac_aa <- read.delim("./data/Usearch/AA/Fig6f_bac_otutab_norm_AA.txt", row.names= 1,header=T, sep="\t",stringsAsFactors = F)
-fungi_aa <- read.delim("./data/Usearch/fAA/Fig6f_fun_otutab_norm_AA.txt", row.names= 1,header=T, sep="\t",stringsAsFactors = F)
+bac_aa <- read.delim("../data/Usearch/AA/otutab_norm_AA.txt", row.names= 1,header=T, sep="\t",stringsAsFactors = F)
+fungi_aa <- read.delim("../data/Usearch/fAA/otutab_norm_AA.txt", row.names= 1,header=T, sep="\t",stringsAsFactors = F)
 
 id <- colnames(fungi_aa)%in%colnames(bac_aa)
 
@@ -330,9 +357,11 @@ Abu <- table.generalist
 
 merge_bac_fungi <- merge_bac_fungi[rownames(merge_bac_fungi) %in% rownames(Abu),]
 
+
+
 ## Tax ##
-bac_tax <- read.delim("./data/Usearch/Tax/Tax.txt", row.names= 1,header=T, sep="\t",stringsAsFactors = F)
-fungi_tax <- read.delim("./data/Usearch/fTax/fTax.txt", row.names= 1,header=F, sep="\t",stringsAsFactors = F)
+bac_tax <- read.delim("../data/Usearch/Tax/Tax.txt", row.names= 1,header=T, sep="\t",stringsAsFactors = F)
+fungi_tax <- read.delim("../data/Usearch/fTax/fTax.txt", row.names= 1,header=F, sep="\t",stringsAsFactors = F)
 
 colnames(fungi_tax)<- colnames(bac_tax)
 # fungi_tax$V10 <- NULL
@@ -348,8 +377,11 @@ merge_bac_fungi$ID <- rownames(merge_bac_fungi)
 merge_abun_tax<- merge(merge_bac_fungi,tax_merge_bac_fungi,by = "ID")
 ```
 
-
 ```{r,warning=FALSE, message=FALSE}
+######dplyr to data manipulation
+# install.packages("psych")
+# library(psych)
+
 aa_dis_a<- merge_abun_tax[,c(2:15,17,22)] %>%
   mutate(rowSumAbun=rowSums(merge_abun_tax[,c(2:15)])) %>%
   group_by(Kingdom,Genus) %>%
@@ -424,6 +456,8 @@ a_dis_p=aa_dis_occor_spearman$p
 rr1 <- a_dis_p
 rr1[lower.tri(rr1)] <- t(rr1)[lower.tri(rr1)]
 a_dis_p<- rr1
+
+
 
 if(.flag == TRUE){
   
@@ -567,14 +601,14 @@ top50_cor_micload_spearman<- corr.test(aa_dis_a[,ids],dis_micload,use = "complet
 
 ```{r,warning=FALSE, message=FALSE}
 ### RA network construction
-design = read.table("./data/doc/design.txt", header=T, row.names= 1, sep="\t") 
+design = read.table("../data/doc/design.txt", header=T, row.names= 1, sep="\t") 
 
 sub_design <- design[design$Spikein %in% "spike"& !design$Other %in% "Bulksoil",]
 id_rm= c("TAD1","TAD5","TAD8","TAH2","TAH7","TAH9")
 sub_design= sub_design[!rownames(sub_design) %in% id_rm,]
 
-bac_aa <- read.delim("./data/Usearch/RA/otutab_norm_RA.txt",  row.names= 1,header=T, sep="\t",stringsAsFactors = F)
-fungi_aa <- read.delim("./data/Usearch/fRA/otutab_norm_RA.txt", row.names= 1,header=T, sep="\t",stringsAsFactors = F)
+bac_aa <- read.delim("../data/Usearch/RA/otutab_norm_RA.txt",  row.names= 1,header=T, sep="\t",stringsAsFactors = F)
+fungi_aa <- read.delim("../data/Usearch/fRA/otutab_norm_RA.txt", row.names= 1,header=T, sep="\t",stringsAsFactors = F)
 
 id <- colnames(fungi_aa) %in% colnames(bac_aa)
 fungi_aa <- fungi_aa[,id]
@@ -583,6 +617,10 @@ id <- match(colnames(bac_aa),colnames(fungi_aa))
 bac_aa <- bac_aa[,id]
 bac_aa <- bac_aa[,colnames(bac_aa)%in% rownames(sub_design)]
 fungi_aa <- fungi_aa[,colnames(fungi_aa)%in% rownames(sub_design)]
+
+
+
+
 
 bac_aa$species <- rep("bac",nrow(bac_aa))
 fungi_aa$species <- rep("fungi",nrow(fungi_aa))

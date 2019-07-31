@@ -1,0 +1,52 @@
+---
+title: "FigureS9"
+author: "Qin Yuan"
+date: "2019/4/1"
+output: html_document
+---
+
+```{r warning=FALSE, message=FALSE}
+rm(list=ls()) 
+
+library(ggplot2)
+library(ggpubr)
+library(dplyr)
+library(tidyr)
+```
+
+
+```{r}
+load <- read.csv("data/20180804-FIG5f.csv", header = T)
+
+data_AH <- filter(load, Site == "AH")
+
+p3 <- ggplot(data_AH , aes(x= Type, y = Mean, fill = Micro )) + 
+  geom_bar(stat = "identity", width=0.7) + 
+  geom_errorbar(aes(ymin=Mean2-Error, ymax=Mean2+Error), width=.1) +
+  labs(x="Group", y="Quantitative kingdom abundance (QA)") +
+  facet_wrap(~Genotype, ncol = 2) +
+  scale_fill_manual(values = c("#fdffab","#a8e6cf"))+
+  theme_bw()
+p3
+# ggsave(paste("figure/20180804-fig5f-data_AH2.pdf", sep=""), p3, width = 5, height = 6)
+
+```
+
+```{r}
+data <- read.csv("data/20180724-heatmap-p.csv", header = T)
+data_ah <- select(data, Bacteria, starts_with("AH"))
+
+all2 <- gather(data_ah, key = group , value = logFC, `AH_MH_RA`:`AH_WYJ_AA`)
+
+p_ah <- ggplot(all2, aes(group, Bacteria)) + 
+  geom_tile(aes(fill = logFC),colour = "grey50") + 
+  scale_fill_gradient2(low = "#6D9EC1",high = "sandybrown", midpoint = 0)+
+  theme(axis.text.x = element_text(angle = -45, vjust = 1, hjust = 0))+
+  scale_y_discrete(limits=c("Gammaproteobacteria","Deltaproteobacteria","Betaproteobacteria",
+                            "Alphaproteobacteria","Verrucomicrobia","Spirochaetes","Nitrospirae",
+                            "Firmicutes","Chloroflexi","Bacteroidetes","Actinobacteria",
+                            "Acidobacteria"))+
+  scale_x_discrete(limits=c("AH_MH_RA","AH_MH_AA","AH_WYJ_RA","AH_WYJ_AA"))
+p_ah
+
+```
