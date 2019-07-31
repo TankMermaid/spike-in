@@ -1,0 +1,13 @@
+Sample	load	ratio
+D6303_1_kneaddata	59.5 	0.002187219
+D6314_1_kneaddata	102.1 	0.003256666
+D6315_1_kneaddata	120.4 	0.002479592
+W6306_1_kneaddata	26.1 	0.000696685
+W6308_1_kneaddata	21.9 	0.002763378
+W6312_1_kneaddata	28.8 	0.001884559
+DWYJ03_1_kneaddata	94.52 	0.005541789
+DWYJ12_1_kneaddata	102.64 	0.00463529
+DWYJ15_1_kneaddata	83.68 	0.002311355
+WWYJ08_1_kneaddata	32.4 	0.001083081
+WWYJ12_1_kneaddata	39.9 	0.001270854
+WWYJ13_1_kneaddata	24.2 	0.001118243
